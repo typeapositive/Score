@@ -1,0 +1,13 @@
+{
+    "typeCheckingMode": "off",
+    "reportMissingImports": false,
+    "reportMissingModuleSource": false,
+    "reportUnusedImport": false,
+    "pythonVersion": "3.10",
+    "venvPath": ".",
+    "venv": "venv",
+    "ignore": [
+        "**/__pycache__",
+        "**/.mypy_cache"
+    ]
+} 

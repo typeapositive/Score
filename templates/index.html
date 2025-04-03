@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Início - Avaliador de Jogos Steam{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-4">Avaliador de Jogos da Steam</h1>
+                <p class="card-text">Bem-vindo ao nosso avaliador de jogos da Steam! Aqui você pode pesquisar jogos, ler análises e compartilhar suas próprias experiências com a comunidade.</p>
+                
+                <form action="{{ url_for('index') }}" method="get" class="mt-4">
+                    <div class="input-group mb-3">
+                        <input type="text" name="search" class="form-control" placeholder="Buscar jogo..." value="{{ search }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-4">{% if search %}Resultados para "{{ search }}"{% else %}Jogos Populares{% endif %}</h2>
+
+{% if games %}
+<div class="row">
+    {% for game in games %}
+    <div class="col-md-4 mb-4">
+        <div class="card game-card h-100">
+            <img src="{{ game.img_url }}" class="card-img-top" alt="{{ game.name }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ game.name }}</h5>
+                <div class="d-grid">
+                    <a href="{{ url_for('game_details', appid=game.appid) }}" class="btn btn-primary">Ver Detalhes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i> Nenhum jogo encontrado para a sua busca. Tente outro termo.
+</div>
+{% endif %}
+{% endblock %} 

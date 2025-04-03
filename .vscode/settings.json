@@ -1,0 +1,18 @@
+{
+    "python.linting.enabled": true,
+    "python.analysis.typeCheckingMode": "off",
+    "python.analysis.diagnosticSeverityOverrides": {
+        "reportMissingImports": "none",
+        "reportMissingModuleSource": "none",
+        "reportImportCycles": "none",
+        "reportUnknownMemberType": "none",
+        "reportUnknownParameterType": "none",
+        "reportUnknownVariableType": "none"
+    },
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}"
+    ],
+    "python.analysis.ignore": ["**/*.ipynb"],
+    "python.languageServer": "Pylance"
+} 

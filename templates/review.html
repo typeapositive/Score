@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Avaliar {{ game.name }} - Avaliador de Jogos Steam{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none">Início</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('game_details', appid=game.appid) }}" class="text-decoration-none">{{ game.name }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Avaliar Jogo</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-4">Avaliar {{ game.name }}</h1>
+                
+                <form method="post" action="{{ url_for('review_game', appid=game.appid) }}">
+                    <div class="mb-4">
+                        <label for="rating" class="form-label">Sua classificação:</label>
+                        <div class="rating-selection">
+                            <div class="btn-group" role="group">
+                                {% for i in range(1, 6) %}
+                                <input type="radio" class="btn-check" name="rating" id="rating{{ i }}" value="{{ i }}" required>
+                                <label class="btn btn-outline-warning" for="rating{{ i }}">
+                                    {{ i }} <i class="fas fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="content" class="form-label">Sua avaliação:</label>
+                        <textarea class="form-control" id="content" name="content" rows="6" required placeholder="Compartilhe sua experiência com este jogo..."></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('game_details', appid=game.appid) }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Publicar Avaliação
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Adiciona estilo visual ao selecionar estrelas
+    document.addEventListener('DOMContentLoaded', function() {
+        const ratingInputs = document.querySelectorAll('input[name="rating"]');
+        const ratingLabels = document.querySelectorAll('.btn-outline-warning');
+        
+        ratingInputs.forEach(function(input, index) {
+            input.addEventListener('change', function() {
+                // Resetar todas as estrelas
+                ratingLabels.forEach(function(label, i) {
+                    if (i <= index) {
+                        label.classList.add('active');
+                        label.classList.add('btn-warning');
+                        label.classList.remove('btn-outline-warning');
+                    } else {
+                        label.classList.remove('active');
+                        label.classList.remove('btn-warning');
+                        label.classList.add('btn-outline-warning');
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %} 

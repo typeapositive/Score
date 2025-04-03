@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}{{ game.name }} - Avaliador de Jogos Steam{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none">Início</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ game.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <img src="{{ game.img_url }}" class="img-fluid rounded" alt="{{ game.name }}">
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title mb-3">{{ game.name }}</h1>
+                <div class="card-text">{{ game.description }}</div>
+                
+                <hr class="my-4">
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('review_game', appid=game.appid) }}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Escrever Avaliação
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt me-2"></i>Faça login para avaliar
+                    </a>
+                    {% endif %}
+                    
+                    <div>
+                        <span class="badge bg-secondary text-white">
+                            <i class="fas fa-comments me-1"></i> {{ reviews|length }} avaliações
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="mb-4">Avaliações dos Usuários</h2>
+
+{% if reviews %}
+    {% for review in reviews %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-circle me-2"></i>{{ review.author.username }}
+                </h5>
+                <div class="star-rating">
+                    {% for i in range(1, 6) %}
+                        {% if i <= review.rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <p class="card-text">{{ review.content }}</p>
+            <div class="text-muted small">
+                <i class="far fa-clock me-1"></i>{{ review.date_posted.strftime('%d/%m/%Y %H:%M') }}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle me-2"></i> Ainda não há avaliações para este jogo. Seja o primeiro a avaliar!
+</div>
+{% endif %}
+{% endblock %} 
