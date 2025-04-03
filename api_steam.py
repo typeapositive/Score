@@ -5,8 +5,7 @@ import time
 import re
 from markupsafe import Markup
 
-# Ei, você vai precisar de uma chave da API da Steam para alguns recursos avançados!
-# Substitua isso pela sua própria chave quando for usar recursos que exigem autenticação
+
 STEAM_API_KEY = 'SUA_CHAVE_API_AQUI'
 
 def get_all_steam_games():
@@ -18,7 +17,7 @@ def get_all_steam_games():
     tem um ID (appid) e nome.
     """
     try:
-        # Hora de pegar a lista gigante de jogos da Steam!
+        #lista gigante de jogos da Steam
         url = "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
         response = requests.get(url)
         
@@ -26,16 +25,14 @@ def get_all_steam_games():
             data = response.json()
             apps = data.get('applist', {}).get('apps', [])
             
-            # Opa, a API retorna muita coisa que nem é jogo! 
-            # Num sistema mais completo, filtraremos melhor isso
+            #api filtra coisa que não é jogo, então é bom filtrar
             return apps
         else:
             print(f"Eita, tivemos um problema com a API da Steam! Código: {response.status_code}")
-            # Sem problemas, temos um plano B com jogos populares
             return _get_sample_games()
     except Exception as e:
         print(f"Nossa, algo deu errado ao buscar os jogos da Steam: {str(e)}")
-        # Vamos usar nosso backup de jogos famosos
+        #backup de jogos famosos
         return _get_sample_games()
 
 def _get_sample_games():
@@ -66,15 +63,14 @@ def get_popular_games(limit=20):
     Você pode definir quantos jogos quer ver com o parâmetro 'limit'.
     """
     try:
-        # Seria incrível usar a API de estatísticas da Steam para pegar os mais jogados
-        # Mas como isso precisa de mais permissões, vamos com nossa lista de sucessos
+        #pegar os mais jogados
         
         popular_appids = [570, 730, 440, 230410, 271590, 252490, 578080, 1174180, 359550, 1091500, 
                          238960, 582010, 292030, 1245620, 1817070, 1172470, 1599340, 400, 550, 218620]
         
         games = []
         for appid in popular_appids[:limit]:
-            # Vamos buscar mais detalhes sobre cada jogo
+            #mais detalhes sobre cada jogo
             details = get_game_details(str(appid))
             if details and 'name' in details:
                 games.append({
@@ -83,7 +79,6 @@ def get_popular_games(limit=20):
                     "img_url": details.get('img_url', f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg")
                 })
         
-        # Não conseguimos informações suficientes? Temos um plano B!
         if len(games) < limit:
             print(f"Hmm, conseguimos apenas {len(games)} jogos... vamos completar a lista!")
             sample_games = [
@@ -104,7 +99,7 @@ def get_popular_games(limit=20):
         return games
     except Exception as e:
         print(f"Ops! Tivemos um problema ao buscar os jogos populares: {str(e)}")
-        # Não tem problema, temos nossa lista de jogos famosos para salvar o dia!
+        #lista de jogos famosos
         sample_games = [
             {"appid": "570", "name": "Dota 2", "img_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg"},
             {"appid": "730", "name": "Counter-Strike 2", "img_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg"},
@@ -127,20 +122,20 @@ def search_games(query, limit=10):
     e vamos encontrar até 'limit' jogos que correspondam.
     """
     if not query or len(query.strip()) < 2:
-        # Se a busca estiver vazia, vamos mostrar os mais populares
+        #se a busca estiver vazia, mostra os mais populares
         return get_popular_games(limit)
     
     try:
-        # Vamos buscar todos os jogos e filtrar aqui mesmo
+        #buscar todos os jogos e filtrar aqui mesmo
         all_games = get_all_steam_games()
         
-        # Hora de encontrar jogos que combinam com sua busca!
+        #encontrar jogos que combinam com a busca
         query = query.lower()
         filtered_games = []
         
         for game in all_games:
             if query in game['name'].lower():
-                # Para cada jogo encontrado, vamos montar um objeto com as infos necessárias
+                #montar um objeto com as infos necessárias
                 appid = str(game['appid'])
                 filtered_games.append({
                     "appid": appid,
@@ -148,14 +143,13 @@ def search_games(query, limit=10):
                     "img_url": f"https://cdn.cloudflare.steamstatic.com/steam/apps/{appid}/header.jpg"
                 })
                 
-                # Não vamos exagerar na quantidade de resultados
                 if len(filtered_games) >= limit:
                     break
         
-        # Não encontramos nada? Vamos tentar com nossos dados de backup
+        #tentar com dados de backup se nao encontrar nada
         if not filtered_games:
             print("Hmm, não encontramos nenhum jogo com esse nome, vamos verificar nossa lista local!")
-            # Vamos usar nossa lista local de jogos populares
+            #usar lista local de jogos populares
             all_games = [
                 {"appid": "570", "name": "Dota 2", "img_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg"},
                 {"appid": "730", "name": "Counter-Strike 2", "img_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg"},
@@ -179,7 +173,7 @@ def search_games(query, limit=10):
         return filtered_games[:limit]
     except Exception as e:
         print(f"Puxa, tivemos um problema na busca: {str(e)}")
-        # Sem pânico! Vamos usar nossa lista de emergência
+        #lista de emergência
         all_games = [
             {"appid": "570", "name": "Dota 2", "img_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/570/header.jpg"},
             {"appid": "730", "name": "Counter-Strike 2", "img_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg"},
@@ -211,10 +205,10 @@ def _clean_html_description(description):
     if not description:
         return "Descrição não disponível"
     
-    # Remover tags de script que podem ser perigosas
+    #remover tags de script que podem ser perigosas
     description = re.sub(r'<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>', '', description)
     
-    # Converter para Markup do Flask para renderizar HTML seguro
+    # Converter pra markup do flask para renderizar HTML seguro
     return Markup(description)
 
 def get_game_details(appid):
@@ -225,23 +219,23 @@ def get_game_details(appid):
     disponíveis como nome, descrição, desenvolvedor, preço e muito mais.
     """
     try:
-        # Vamos perguntar diretamente para a loja da Steam sobre este jogo
-        # Adicionando parâmetro para solicitar a API em português (pt-BR)
+        #perguntar diretamente pra a loja da Steam sobre este jogo
+        #adicionando parâmetro pra solicitar a API em português (pt-BR)
         url = f"https://store.steampowered.com/api/appdetails?appids={appid}&l=brazilian"
         response = requests.get(url)
         
         if response.status_code == 200:
             data = response.json()
             
-            # Vamos verificar se a API nos deu uma resposta completa
+            #verificar se a API deu uma resposta completa
             if data and appid in data and data[appid]['success']:
                 game_data = data[appid]['data']
                 
-                # Obter a descrição e limpar o HTML
+                #obter a descrição e limpar o HTML
                 description = game_data.get('detailed_description', game_data.get('about_the_game', 'Descrição não disponível'))
                 cleaned_description = _clean_html_description(description)
                 
-                # Agora vamos organizar as informações do jogo de forma clara
+                #organizar as informações do jogo de forma clara
                 return {
                     "appid": appid,
                     "name": game_data.get('name', 'Nome não disponível'),
@@ -253,14 +247,11 @@ def get_game_details(appid):
                     "genres": [genre.get('description', '') for genre in game_data.get('genres', [])],
                     "price": _format_price(game_data.get('price_overview', {}))
                 }
-        
-        # Poxa, a API não nos deu o que precisávamos... vamos usar nosso backup!
         print(f"A API da Steam não retornou dados válidos para o jogo {appid}. Usando dados de backup.")
         return _get_sample_game_details(appid)
     
     except Exception as e:
         print(f"Eita! Erro ao buscar detalhes do jogo {appid}: {str(e)}")
-        # Sem problemas, temos nossas informações de emergência
         return _get_sample_game_details(appid)
 
 def _format_price(price_data):
@@ -273,11 +264,10 @@ def _format_price(price_data):
     if not price_data:
         return "Preço não disponível"
     
-    # Se for de graça, deixamos isso bem claro!
     if price_data.get('final_formatted', '') == '':
         return "Gratuito para Jogar"
     
-    # Devolve o preço formatado certinho
+    #devolve o preço formatado certinho
     return price_data.get('final_formatted', 'Preço não disponível')
 
 def _get_sample_game_details(appid):
@@ -287,7 +277,7 @@ def _get_sample_game_details(appid):
     Quando a API não nos dá as informações, recorremos a esta coleção
     de detalhes pré-definidos para os jogos mais conhecidos.
     """
-    # Nossa biblioteca de informações sobre os jogos mais famosos
+    #biblioteca de informações sobre os jogos mais famosos
     sample_games = {
         "570": {
             "appid": "570",
@@ -379,7 +369,7 @@ def _get_sample_game_details(appid):
         }
     }
     
-    # Se encontrarmos o jogo na nossa biblioteca, ótimo! Senão, criamos uma resposta padrão
+    #se não encontrar o jogo na biblioteca, cria uma resposta padrão
     return sample_games.get(appid, {
         "appid": appid,
         "name": "Jogo não encontrado",
