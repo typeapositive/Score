@@ -1,3 +1,10 @@
+"""
+Avaliador de Jogos da Steam
+
+Aplicação Flask que permite aos usuários visualizar e avaliar jogos da Steam,
+bem como interagir por meio de um fórum de avaliações.
+"""
+
 import os
 from flask import Flask, render_template, redirect, url_for, flash, request, session
 from flask_sqlalchemy import SQLAlchemy
@@ -9,7 +16,7 @@ import sqlite3
 import api_steam as steam_api
 
 # Configuração do aplicativo
-app = Flask(__name__)
+app = Flask(name)
 app.config['SECRET_KEY'] = 'chave-secreta-do-avaliador-de-jogos'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -22,21 +29,30 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Definição das models
 class User(db.Model, UserMixin):
+    """
+    Modelo de usuário do sistema.
+    Contém informações de autenticação e relacionamento com avaliações.
+    """
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
     reviews = db.relationship('Review', backref='author', lazy=True)
-    
+
     def set_password(self, password):
+        """Gera o hash da senha e armazena no objeto."""
         self.password_hash = generate_password_hash(password)
-        
+
     def check_password(self, password):
+        """Verifica se a senha fornecida corresponde ao hash armazenado."""
         return check_password_hash(self.password_hash, password)
 
 class Review(db.Model):
+    """
+    Modelo de avaliação de jogos.
+    Relaciona-se a um jogo específico e a um usuário autor.
+    """
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.String(50), nullable=False)
     game_name = db.Column(db.String(100), nullable=False)
@@ -47,17 +63,27 @@ class Review(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
+    """
+    Callback para carregar o usuário atual com base no ID armazenado na sessão.
+    """
     return User.query.get(int(user_id))
 
-# Rotas
 @app.route('/')
 def index():
+    """
+    Página inicial da aplicação.
+    Mostra os jogos populares ou resultados de uma pesquisa.
+    """
     search = request.args.get('search', '')
     games = steam_api.search_games(search) if search else steam_api.get_popular_games()
     return render_template('index.html', games=games, search=search)
 
 @app.route('/game/<appid>')
 def game_details(appid):
+    """
+    Página de detalhes de um jogo específico.
+    Exibe informações do jogo e avaliações dos usuários.
+    """
     game = steam_api.get_game_details(appid)
     reviews = Review.query.filter_by(game_id=appid).order_by(Review.date_posted.desc()).all()
     return render_template('game.html', game=game, reviews=reviews)
@@ -65,11 +91,14 @@ def game_details(appid):
 @app.route('/review/<appid>', methods=['GET', 'POST'])
 @login_required
 def review_game(appid):
+    """
+    Permite ao usuário logado escrever uma nova avaliação para um jogo.
+    """
     game = steam_api.get_game_details(appid)
     if request.method == 'POST':
         content = request.form.get('content')
         rating = int(request.form.get('rating'))
-        
+
         if not content or rating < 1 or rating > 5:
             flash('Por favor, forneça uma análise e uma classificação válida (1-5)', 'danger')
         else:
@@ -89,11 +118,18 @@ def review_game(appid):
 
 @app.route('/forum')
 def forum():
+    """
+    Página do fórum que lista todas as avaliações publicadas.
+    """
     reviews = Review.query.order_by(Review.date_posted.desc()).all()
     return render_template('forum.html', reviews=reviews)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """
+    Página de registro de novos usuários.
+    Valida entradas e cria contas no banco de dados.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     
@@ -126,6 +162,10 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    Página de login de usuários existentes.
+    Autentica e redireciona para a página inicial.
+    """
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     
@@ -149,11 +189,14 @@ def login():
 @app.route('/logout')
 @login_required
 def logout():
+    """
+    Encerra a sessão do usuário atual.
+    """
     logout_user()
     flash('Você saiu da sua conta', 'info')
     return redirect(url_for('index'))
 
-if __name__ == '__main__':
+if name == 'main':
     with app.app_context():
         db.create_all()
-    app.run(debug=True) 
+    app.run(debug=True)
