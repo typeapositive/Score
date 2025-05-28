@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Comunidade - SCORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game-search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">Criar Nova Comunidade</h1>
+                    
+                    {% if game_name %}
+                        <div class="selected-game">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ game_img }}" alt="{{ game_name }}" class="me-3">
+                                <div>
+                                    <h5 class="game-name mb-1">{{ game_name }}</h5>
+                                    <p class="game-id mb-0">ID: {{ game_id }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <form action="{{ url_for('create_community') }}" method="post" id="createCommunityForm">
+                        {% if game_id %}
+                            <input type="hidden" name="game_id" value="{{ game_id }}">
+                            <input type="hidden" name="game_name" value="{{ game_name }}">
+                            <input type="hidden" name="game_img" value="{{ game_img }}">
+                        {% else %}
+                            <div class="mb-3">
+                                <label for="game_search" class="form-label">Buscar Jogo</label>
+                                <div class="game-search-container">
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="game_search" 
+                                               placeholder="Digite o nome do jogo para ver sugestões..." 
+                                               autocomplete="off">
+                                        <button class="btn search-btn" type="button" onclick="searchGame()">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </div>
+                                    <div id="game_results" style="display: none;">
+                                        <div class="list-group" id="games_list">
+                                            <!-- Resultados da busca serão inseridos aqui -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="hidden" name="game_id" id="game_id" required>
+                            <input type="hidden" name="game_name" id="game_name" required>
+                            <input type="hidden" name="game_img" id="game_img" required>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="community_name" class="form-label">Nome da Comunidade</label>
+                            <input type="text" class="form-control" id="community_name" name="name" required
+                                   placeholder="Digite um nome para sua comunidade">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descrição da Comunidade</label>
+                            <textarea class="form-control" id="description" name="description" rows="4" required 
+                                    placeholder="Descreva o propósito desta comunidade..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="createButton" disabled>
+                                <i class="fas fa-plus-circle"></i> Criar Comunidade
+                            </button>
+                            <a href="{{ url_for('communities') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Voltar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+let searchTimeout;
+
+function searchGame() {
+    const searchTerm = document.getElementById('game_search').value;
+    if (!searchTerm) return;
+
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetch(`/api/search_games?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('game_results');
+                const gamesList = document.getElementById('games_list');
+                gamesList.innerHTML = '';
+
+                data.forEach(game => {
+                    const item = document.createElement('div');
+                    item.className = 'game-item d-flex align-items-center p-2';
+                    item.innerHTML = `
+                        <img src="${game.img_url}" alt="${game.name}" class="me-3">
+                        <div class="game-info">
+                            <div class="game-name">${game.name}</div>
+                            <div class="game-id">ID: ${game.appid}</div>
+                        </div>
+                    `;
+                    item.onclick = () => selectGame(game);
+                    gamesList.appendChild(item);
+                });
+
+                resultsDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Erro ao buscar jogos:', error);
+                alert('Erro ao buscar jogos. Tente novamente.');
+            });
+    }, 300);
+}
+
+function selectGame(game) {
+    document.getElementById('game_id').value = game.appid;
+    document.getElementById('game_name').value = game.name;
+    document.getElementById('game_img').value = game.img_url;
+    document.getElementById('game_search').value = game.name;
+    document.getElementById('game_results').style.display = 'none';
+    document.getElementById('createButton').disabled = false;
+}
+
+// Adiciona evento de input para busca em tempo real
+document.getElementById('game_search').addEventListener('input', searchGame);
+
+// Fecha a lista de resultados quando clicar fora
+document.addEventListener('click', function(event) {
+    const resultsDiv = document.getElementById('game_results');
+    const searchInput = document.getElementById('game_search');
+    if (!searchInput.contains(event.target) && !resultsDiv.contains(event.target)) {
+        resultsDiv.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
+{% endblock %} 

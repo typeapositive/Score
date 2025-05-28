@@ -1,0 +1,425 @@
+/* Estilos gerais para comunidade e fórum */
+.community-header {
+    background-color: #1b2838;
+    border-radius: 0.5rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.community-header .game-info {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.community-header .game-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    border: 2px solid #66c0f4;
+}
+
+.community-header .game-details h1 {
+    color: #c7d5e0;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.community-header .game-details p {
+    color: #66c0f4;
+    margin-bottom: 0.5rem;
+}
+
+.community-header .community-description {
+    flex: 1;
+    color: #c7d5e0;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Estilos para o texto da descrição no cabeçalho */
+.community-description-text {
+    color: #c7d5e0;
+    font-size: 1rem;
+    margin-top: 10px; /* Espaço acima da descrição */
+    /* Remover flex-1 e outros estilos que causam desalinhamento se necessário */
+}
+
+/* Estilos para posts */
+.post-card {
+    background-color: #2a475e;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.post-author-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.post-author-name {
+    color: #66c0f4;
+    font-weight: 500;
+    margin: 0;
+}
+
+.post-date {
+    color: #c7d5e0;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.post-content {
+    color: #c7d5e0;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.post-media {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.post-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #1b2838;
+}
+
+.post-action-btn {
+    background: none;
+    border: none;
+    color: #66c0f4;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    transition: background-color 0.2s;
+}
+
+.post-action-btn:hover {
+    background-color: #1b2838;
+}
+
+/* Estilos para comentários */
+.comments-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #1b2838;
+}
+
+.comment-card {
+    background-color: #1b2838;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.comment-author-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-author-name {
+    color: #66c0f4;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.comment-date {
+    color: #c7d5e0;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.comment-content {
+    color: #c7d5e0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Estilos para o formulário de comentários */
+.comment-form textarea {
+    background-color: #1b2838;
+    border: 1px solid #66c0f4;
+    color: #c7d5e0;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem; /* Espaço entre a textarea e o botão */
+    width: 100%; /* Fazer a textarea ocupar a largura total disponível */
+    box-sizing: border-box; /* Incluir padding e borda no tamanho total */
+}
+
+.comment-form textarea:focus {
+    background-color: #1b2838;
+    border-color: #66c0f4;
+    color: #c7d5e0;
+    box-shadow: 0 0 0 0.25rem rgba(102, 192, 244, 0.25);
+}
+
+/* Estilos para o upload de mídia customizado */
+.file-upload-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.file-upload-label {
+    background-color: #66c0f4;
+    color: #1b2838;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.file-upload-label:hover {
+    background-color: #1999ff;
+}
+
+.file-upload-input {
+    display: none; /* Esconde o input de arquivo padrão */
+}
+
+.file-selected-name {
+    color: #c7d5e0;
+    font-size: 0.9rem;
+}
+
+/* Estilos para o indicador de líder */
+.community-leader {
+    color: #ffc107; /* Cor de destaque, como dourado */
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+
+.community-leader i {
+    margin-right: 3px;
+}
+
+/* Estilos para formulários */
+.post-form {
+    background-color: #2a475e;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.post-form textarea {
+    background-color: #1b2838;
+    border: 1px solid #66c0f4;
+    color: #c7d5e0;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.post-form textarea:focus {
+    background-color: #1b2838;
+    border-color: #66c0f4;
+    color: #c7d5e0;
+    box-shadow: 0 0 0 0.25rem rgba(102, 192, 244, 0.25);
+}
+
+.post-form .btn-primary {
+    background-color: #66c0f4;
+    border-color: #66c0f4;
+    color: #1b2838;
+}
+
+.post-form .btn-primary:hover {
+    background-color: #1999ff;
+    border-color: #1999ff;
+}
+
+/* Estilos para o fórum */
+.review-card {
+    background-color: #2a475e;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.review-game-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.review-game-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.review-game-name {
+    color: #66c0f4;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.review-rating {
+    color: #ffd700;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.review-content {
+    color: #c7d5e0;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.review-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #1b2838;
+}
+
+.review-responses {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #1b2838;
+}
+
+.response-form {
+    background-color: #1b2838;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.response-form textarea {
+    background-color: #2a475e;
+    border: 1px solid #66c0f4;
+    color: #c7d5e0;
+    border-radius: 0.25rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.response-form textarea:focus {
+    background-color: #2a475e;
+    border-color: #66c0f4;
+    color: #c7d5e0;
+    box-shadow: 0 0 0 0.25rem rgba(102, 192, 244, 0.25);
+}
+
+.response-card {
+    background-color: #1b2838;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.response-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.response-author-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.response-author-name {
+    color: #66c0f4;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.response-date {
+    color: #c7d5e0;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.response-content {
+    color: #c7d5e0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.community-card {
+    background-color: #2a475e;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.community-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.community-info h4 {
+    color: #66c0f4;
+    margin: 0;
+}
+
+.community-info p {
+    color: #c7d5e0;
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+} 

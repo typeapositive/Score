@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} - SCORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-avatar-container">
+            <img src="{{ url_for('static', filename=user.avatar_url) }}" alt="{{ user.username }}" class="profile-avatar">
+        </div>
+        <div class="profile-info">
+            <h1 class="profile-username">{{ user.username }}</h1>
+            {% if current_user.is_authenticated and current_user.id == user.id %}
+            <button class="edit-profile-btn" onclick="showEditProfileModal()">
+                <i class="fas fa-edit"></i>
+            </button>
+            {% elif current_user.is_authenticated and current_user.id != user.id %}
+            <button class="invite-community-btn" data-bs-toggle="modal" data-bs-target="#inviteCommunityModal">
+                <i class="fas fa-user-plus"></i>
+            </button>
+            {% endif %}
+            <p class="profile-bio">{{ user.bio or 'Este usuário ainda não adicionou uma biografia.' }}</p>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-value">{{ reviews|length }}</div>
+                    <div class="stat-label">Avaliações</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ communities|length }}</div>
+                    <div class="stat-label">Comunidades</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ friends|length }}</div>
+                    <div class="stat-label">Amigos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if current_user.is_authenticated and current_user.id == user.id %}
+    <div class="favorite-games">
+        <h3>Jogos Favoritos</h3>
+        <div class="favorite-games-slots">
+            {% set favorite_games = user.favorite_games.split(',') if user.favorite_games else [] %}
+            {% for i in range(5) %}
+                {% if i < favorite_games|length and favorite_games[i] %}
+                    {% set game = steam_api.get_game_details(favorite_games[i]) %}
+                    {% if game %}
+                    <div class="game-slot filled" data-game-id="{{ game.appid }}">
+                        <img src="{{ game.img_url }}" alt="{{ game.name }}">
+                        <button class="remove-game" onclick="removeFavoriteGame('{{ game.appid }}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="game-slot empty" onclick="showGameSearch('{{ i }}')">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    {% endif %}
+                {% else %}
+                <div class="game-slot empty" onclick="showGameSearch('{{ i }}')">
+                    <i class="fas fa-plus"></i>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="communities-section">
+        <h3>Comunidades</h3>
+        <div class="communities-grid">
+            {% for community in communities %}
+            <a href="{{ url_for('community_details', community_id=community.id) }}" class="community-card-link">
+                <div class="community-card">
+                    <img src="{{ community.game_img }}" alt="{{ community.name }}" class="community-image">
+                    <div class="community-info">
+                        <h4>{{ community.name }}</h4>
+                        <p>{{ community.game_name }}</p>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="timeline">
+        <h3>Avaliações</h3>
+        {% for review in reviews %}
+        <div class="review-card">
+            <div class="review-header">
+                <img src="{{ review.game_img }}" alt="{{ review.game_name }}" class="review-game-image">
+                <div>
+                    <h4>{{ review.game_name }}</h4>
+                    <div class="review-rating">
+                        {% for i in range(review.rating) %}
+                            <i class="fas fa-star"></i>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="review-content">
+                {{ review.content }}
+            </div>
+            <div class="review-actions">
+                <small class="text-muted">{{ review.date_posted.strftime('%d/%m/%Y %H:%M') }}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de Edição de Perfil -->
+<div class="modal fade" id="editProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Perfil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{{ url_for('update_profile') }}" method="post" enctype="multipart/form-data">
+                    <div class="file-upload-container">
+                        <input type="file" class="file-upload-input" id="avatar" name="avatar" accept="image/*" onchange="previewImage(this)">
+                        <label for="avatar" class="file-upload-label">
+                            <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                            <span class="file-upload-text">Clique para selecionar uma foto de perfil</span>
+                        </label>
+                        <div class="file-upload-preview" id="avatarPreview">
+                            <img src="" alt="Preview">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Biografia</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ user.bio }}</textarea>
+                    </div>
+                    <input type="hidden" id="favorite_games" name="favorite_games" value="{{ user.favorite_games }}">
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Busca de Jogos -->
+<div class="modal fade" id="gameSearchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Jogo Favorito</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="gameSearchInput" placeholder="Buscar jogo...">
+                </div>
+                <div id="gameSearchResults" class="game-search-results" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Convite para Comunidade -->
+<div class="modal fade" id="inviteCommunityModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Convidar para Comunidade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Selecione uma comunidade para convidar {{ user.username }}:</p>
+                <ul class="list-group">
+                    {% for member in current_user.communities %}
+                        <li class="list-group-item invite-community-item" data-community-id="{{ member.community.id }}" data-community-name="{{ member.community.name }}">
+                            <img src="{{ member.community.game_img }}" alt="{{ member.community.name }}" class="community-image me-2" style="width: 30px; height: 30px; border-radius: 4px;">
+                            {{ member.community.name }}
+                        </li>
+                    {% else %}
+                        <li class="list-group-item text-muted">Você não é membro de nenhuma comunidade para convidar.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+console.log('Script block started'); // Log para confirmar que o script está executando
+
+let searchTimeout = null; // Inicializa searchTimeout aqui
+let currentSlotIndex = null; // Inicializa currentSlotIndex aqui
+
+// Inicializa a modal de busca de jogos
+const gameSearchModalElement = document.getElementById('gameSearchModal');
+let gameSearchModal;
+if (gameSearchModalElement) {
+    gameSearchModal = new bootstrap.Modal(gameSearchModalElement);
+    console.log('Modal de busca de jogos inicializada.');
+} else {
+    console.error('Elemento da modal de busca de jogos não encontrado!');
+}
+
+const gameSearchInput = document.getElementById('gameSearchInput');
+const gameSearchResults = document.getElementById('gameSearchResults');
+const favoriteGamesInput = document.getElementById('favorite_games');
+const gameSearchForm = gameSearchModalElement ? gameSearchModalElement.querySelector('form') : null; // Captura o formulário dentro da modal
+
+// Verifica se todos os elementos essenciais para a busca de jogos foram encontrados
+if (!gameSearchInput || !gameSearchResults || !favoriteGamesInput || !gameSearchForm) {
+    console.error('Um ou mais elementos essenciais para a busca de jogos não foram encontrados.');
+}
+
+function showGameSearch(slotIndex) {
+    console.log('showGameSearch called with index:', slotIndex);
+    currentSlotIndex = slotIndex;
+    if (gameSearchModal) {
+        gameSearchModal.show();
+        if (gameSearchInput) {
+            gameSearchInput.focus();
+            gameSearchInput.value = ''; // Clear previous search
+        }
+        if (gameSearchResults) {
+            gameSearchResults.innerHTML = ''; // Clear previous results
+            gameSearchResults.style.display = 'none';
+        }
+    } else {
+        console.error('Modal de busca de jogos não inicializada.');
+    }
+}
+
+function removeFavoriteGame(gameId) {
+    console.log('removeFavoriteGame called with gameId:', gameId);
+    let favoriteGames = favoriteGamesInput.value.split(',').filter(id => id && id !== gameId.toString());
+    favoriteGamesInput.value = favoriteGames.join(',');
+    updateFavoriteGamesDisplay();
+}
+
+function addFavoriteGame(gameId, gameName, gameImg) {
+    console.log('addFavoriteGame called with:', { gameId, gameName, gameImg });
+    let favoriteGames = favoriteGamesInput.value.split(',').filter(id => id);
+    if (favoriteGames.length < 5 && !favoriteGames.includes(gameId.toString())) { // Prevent adding duplicates
+        favoriteGames.push(gameId);
+        favoriteGamesInput.value = favoriteGames.join(',');
+        updateFavoriteGamesDisplay();
+        if (gameSearchModal) gameSearchModal.hide();
+    } else if (favoriteGames.includes(gameId.toString())) {
+        alert('Este jogo já está na sua lista de favoritos!'); // Or use Flask flash messages
+    } else {
+        alert('Você já atingiu o limite de 5 jogos favoritos.'); // Or use Flask flash messages
+    }
+}
+
+function updateFavoriteGamesDisplay() {
+    console.log('updateFavoriteGamesDisplay called');
+    const favoriteGames = favoriteGamesInput.value.split(',').filter(id => id);
+    const slots = document.querySelectorAll('.favorite-games-slots .game-slot');
+
+    slots.forEach((slot, index) => {
+        if (index < favoriteGames.length) {
+            const gameId = favoriteGames[index];
+            console.log('Fetching details for gameId:', gameId);
+            // Use a proxy ou rota Flask para obter detalhes do jogo
+            fetch(`/api/game_details/${gameId}`)
+                .then(response => response.json())
+                .then(game => {
+                    console.log('Game details fetched:', game);
+                    if (game && !game.error) { // Check if game details were fetched successfully
+                        slot.className = 'game-slot filled';
+                        slot.innerHTML = `
+                            <img src="${game.img_url}" alt="${game.name}">
+                            <button class="remove-game" onclick="removeFavoriteGame(${game.appid})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        slot.onclick = null; // Remove onclick for empty state
+                    } else { // Handle case where game details are not found
+                        console.warn('Game details not found for gameId:', gameId, game);
+                        // Remover o ID do jogo inválido do input oculto
+                        let currentFavorites = favoriteGamesInput.value.split(',').filter(id => id && id !== gameId.toString());
+                        favoriteGamesInput.value = currentFavorites.join(',');
+                        // Atualizar a exibição novamente após remover o ID inválido
+                        updateFavoriteGamesDisplay(); // Chamada recursiva para corrigir o slot
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar detalhes do jogo:', error);
+                     // Remover o ID do jogo com erro do input oculto
+                    let currentFavorites = favoriteGamesInput.value.split(',').filter(id => id && id !== gameId.toString());
+                    favoriteGamesInput.value = currentFavorites.join(',');
+                    // Atualizar a exibição novamente após remover o ID inválido
+                    updateFavoriteGamesDisplay(); // Chamada recursiva
+                });
+        } else {
+             console.warn('Favorite game ID is empty at index:', index);
+             // Remover IDs vazios ou inválidos do input oculto
+             let currentFavorites = favoriteGamesInput.value.split(',').filter(id => id);
+             favoriteGamesInput.value = currentFavorites.join(',');
+             updateFavoriteGamesDisplay(); // Chamada recursiva
+        }
+    });
+    // Re-anexar listeners de clique aos slots vazios após a atualização do DOM
+    attachGameSlotListeners();
+}
+
+// Função para anexar listeners de clique aos slots vazios (chamada em DOMContentLoaded e updateDisplay)
+function attachGameSlotListeners() {
+    console.log('attachGameSlotListeners called');
+    const emptySlots = document.querySelectorAll('.game-slot.empty');
+    console.log('Found empty game slots for listener:', emptySlots.length);
+    emptySlots.forEach((slot, index) => {
+        // Remove listeners existentes para evitar duplicação
+        // Uma forma mais robusta seria usar removeEventListener com a função nomeada
+        slot.onclick = null;
+        const slotIndex = Array.from(slot.parentNode.children).indexOf(slot); // Encontra o índice real do slot
+        slot.onclick = () => showGameSearch(slotIndex); // Anexa o listener onclick
+        console.log('Attached onclick listener to empty slot index:', slotIndex);
+    });
+}
+
+// Lógica de busca de jogos dentro da modal
+if (gameSearchInput) {
+    gameSearchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        console.log('Searching for games with query:', query);
+        if (query.length >= 2) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                fetch(`/api/search_games?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(games => {
+                        console.log('Search results:', games);
+                        const gamesList = gameSearchResults ? gameSearchResults.querySelector('#games_list') : null;
+                        if (gamesList) {
+                            gamesList.innerHTML = '';
+                            if (games && games.length > 0) {
+                                games.forEach(game => {
+                                    const item = document.createElement('div');
+                                    item.className = 'game-search-item list-group-item list-group-item-action d-flex align-items-center';
+                                    // Adiciona dados do jogo para a função selectGame
+                                    item.dataset.appid = game.appid;
+                                    item.dataset.name = game.name;
+                                    item.dataset.imgUrl = game.img_url;
+
+                                    item.innerHTML = `
+                                        <img src="${game.img_url}" alt="${game.name}" class="me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                        <div class="game-info">
+                                            <div class="game-name">${game.name}</div>
+                                        </div>
+                                    `;
+                                    // Usa addEventListener em vez de onclick para flexibilidade
+                                    item.addEventListener('click', function() {
+                                        // Obtém dados do dataset
+                                        const appid = this.dataset.appid;
+                                        const name = this.dataset.name;
+                                        const imgUrl = this.dataset.imgUrl;
+                                        selectGame({ appid: appid, name: name, img_url: imgUrl });
+                                    });
+                                    gamesList.appendChild(item);
+                                });
+                                if (gameSearchResults) gameSearchResults.style.display = 'block';
+                            } else {
+                                 if (gamesList) gamesList.innerHTML = '<div class="list-group-item text-muted">Nenhum jogo encontrado.</div>';
+                                 if (gameSearchResults) gameSearchResults.style.display = 'block';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro na busca de jogos:', error);
+                         const gamesList = gameSearchResults ? gameSearchResults.querySelector('#games_list') : null;
+                        if (gamesList) gamesList.innerHTML = '<div class="list-group-item text-danger">Ocorreu um erro ao buscar jogos.</div>';
+                        if (gameSearchResults) gameSearchResults.style.display = 'block';
+                    });
+            }, 300);
+        } else {
+             if (gameSearchResults) gameSearchResults.style.display = 'none';
+             const gamesList = gameSearchResults ? gameSearchResults.querySelector('#games_list') : null;
+             if (gamesList) gamesList.innerHTML = '';
+        }
+    });
+}
+
+// Esconde os resultados da busca quando clicar fora da modal
+document.addEventListener('click', function(event) {
+    const isClickInsideModal = gameSearchModalElement ? gameSearchModalElement.contains(event.target) : false;
+    const isClickInsideInput = gameSearchInput ? gameSearchInput.contains(event.target) : false;
+    const isClickInsideResults = gameSearchResults ? gameSearchResults.contains(event.target) : false;
+
+    if (gameSearchResults && gameSearchResults.style.display === 'block') {
+         // Esconde os resultados apenas se o clique for fora do input e dos próprios resultados
+        if (!isClickInsideInput && !isClickInsideResults) {
+            gameSearchResults.style.display = 'none';
+        }
+    }
+});
+
+// Impede que o formulário da modal submeta e recarregue a página
+if (gameSearchForm) {
+     gameSearchForm.addEventListener('submit', function(event) {
+         event.preventDefault();
+     });
+}
+
+// Chamada inicial para exibir os jogos favoritos existentes e anexar listeners aos slots vazios
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOMContentLoaded no script de perfil.');
+    // Verifica se o input hidden favorite_games existe antes de chamar updateFavoriteGamesDisplay
+    if (favoriteGamesInput) {
+         updateFavoriteGamesDisplay();
+         console.log('updateFavoriteGamesDisplay called on DOMContentLoaded.');
+    } else {
+         console.error('Input favorite_games não encontrado. Não é possível inicializar jogos favoritos.');
+    }
+});
+
+function showEditProfileModal() {
+    var modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+    modal.show();
+}
+
+function previewImage(input) {
+    const preview = document.getElementById('avatarPreview');
+    const previewImg = preview.querySelector('img');
+    const uploadText = document.querySelector('.file-upload-text');
+    
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            preview.style.display = 'block';
+            uploadText.style.display = 'none'; // Hide text when image is present
+        }
+        
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+         uploadText.style.display = 'block'; // Show text when no image is selected
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const inviteCommunityModalElement = document.getElementById('inviteCommunityModal');
+    inviteCommunityModalElement.addEventListener('click', function(event) {
+        const target = event.target.closest('.invite-community-item');
+        if (target) {
+            const communityId = target.dataset.communityId;
+            const username = '{{ user.username }}'; // Pega o username do template
+            
+            // Cria um formulário dinâmico para enviar a requisição POST
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/profile/${username}/invite`;
+            
+            const communityInput = document.createElement('input');
+            communityInput.type = 'hidden';
+            communityInput.name = 'community_id';
+            communityInput.value = communityId;
+            form.appendChild(communityInput);
+            
+            // Adiciona o token CSRF se você estiver usando um (recomendado)
+            // const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            // const csrfInput = document.createElement('input');
+            // csrfInput.type = 'hidden';
+            // csrfInput.name = 'csrf_token'; // Verifique o nome do seu campo CSRF
+            // csrfInput.value = csrfToken;
+            // form.appendChild(csrfInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM completamente carregado.');
+
+    // Preview da imagem de avatar
+    const avatarInput = document.getElementById('avatar');
+    const avatarPreview = document.getElementById('avatar-preview');
+    if (avatarInput && avatarPreview) {
+        console.log('Elementos de avatar encontrados.');
+        avatarInput.addEventListener('change', function() {
+            console.log('Evento de mudança no input de avatar.');
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    console.log('Preview do avatar gerado.', e.target.result);
+                    avatarPreview.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Lógica para adicionar jogos favoritos (ao clicar nos slots)
+    const favoriteGameSlots = document.querySelectorAll('.favorite-games-slot');
+    console.log('Slots de jogos favoritos encontrados:', favoriteGameSlots.length);
+    favoriteGameSlots.forEach(slot => {
+        console.log('Adicionando listener para slot:', slot);
+        slot.addEventListener('click', function() {
+            // Implementar a lógica para selecionar e adicionar jogos
+            console.log('Slot clicado!', this);
+            alert('Funcionalidade de adicionar jogos em desenvolvimento!'); // Placeholder
+        });
+    });
+
+    // Lógica da modal de convite (já existente)
+    var inviteModal = document.getElementById('inviteModal');
+    if (inviteModal) {
+        console.log('Modal de convite encontrada.');
+        inviteModal.addEventListener('show.bs.modal', function (event) {
+            // Button that triggered the modal
+            var button = event.relatedTarget;
+            // Extract info from data-bs-* attributes
+            var recipient = button.getAttribute('data-bs-username');
+            var modalTitle = inviteModal.querySelector('.modal-title');
+            // Update the modal's content.
+            modalTitle.textContent = 'Convidar ' + recipient + ' para uma Comunidade';
+        });
+    }
+});
+
+</script>
+{% endblock %} 

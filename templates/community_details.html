@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}{{ community.name }} - SCORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container community-page">
+    <div class="community-info-section">
+        <div class="community-header">
+            <div class="game-info">
+                <img src="{{ community.game_img }}" alt="{{ community.game_name }}" class="game-image">
+                <div class="game-details">
+                    <h1>{{ community.name }}</h1>
+                    <p>Comunidade para {{ community.game_name }}</p>
+                    <p class="text-muted">Criada em {{ community.created_at.strftime('%d/%m/%Y') }}</p>
+                    <p class="community-description-text mb-0">{{ community.description }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if is_member %}
+        <div class="post-form">
+            <form action="{{ url_for('create_post', community_id=community.id) }}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="3" placeholder="Compartilhe algo com a comunidade..." required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="media" class="form-label">Adicionar mídia (opcional)</label>
+                    <div class="file-upload-container">
+                        <input type="file" class="file-upload-input" id="media" name="media" accept="image/*,video/*" onchange="updateMediaFileName(this)">
+                        <label for="media" class="file-upload-label">
+                            <i class="fas fa-cloud-upload-alt file-upload-icon"></i>
+                            <span class="file-upload-text">Clique para selecionar mídia</span>
+                        </label>
+                        <span class="file-selected-name" id="mediaFileName">Nenhum arquivo selecionado.</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> Publicar
+                </button>
+            </form>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i> Você precisa ser membro para postar nesta comunidade.
+            <form action="{{ url_for('join_community', community_id=community.id) }}" method="post" class="mt-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Entrar na Comunidade
+                </button>
+            </form>
+        </div>
+    {% endif %}
+
+    <div class="posts">
+        {% for post in posts %}
+            <div class="post-card">
+                <div class="post-header">
+                    <img src="{{ post.author.avatar_url }}" alt="{{ post.author.username }}" class="post-author-avatar">
+                    <div>
+                        <h5 class="post-author-name" data-post-author-id="{{ post.user_id }}" data-community-creator-id="{{ community.creator_id }}">
+                            <a href="{{ url_for('profile', username=post.author.username) }}">{{ post.author.username }}</a>
+                            {% if post.author.id == community.creator_id %}
+                                <span class="community-leader"><i class="fas fa-crown"></i> Líder</span>
+                            {% endif %}
+                        </h5>
+                        <small class="text-muted">{{ post.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                    </div>
+                </div>
+                <div class="post-content">
+                    {{ post.content }}
+                </div>
+                {% if post.media_url %}
+                    {% if post.media_type == 'image' %}
+                        <img src="{{ url_for('static', filename=post.media_url) }}" alt="Mídia do post" class="post-media">
+                    {% elif post.media_type == 'video' %}
+                        <video src="{{ url_for('static', filename=post.media_url) }}" controls class="post-media"></video>
+                    {% endif %}
+                {% endif %}
+                <div class="post-actions">
+                    <form action="{{ url_for('like_post', post_id=post.id) }}" method="post" class="d-inline">
+                        <button type="submit" class="post-action-btn">
+                            <i class="fas fa-thumbs-up"></i> Curtir ({{ post.likes }})
+                        </button>
+                    </form>
+                    {% if current_user.is_authenticated and (current_user.id == post.user_id or current_user.id == community.creator_id) %}
+                    <form action="{{ url_for('delete_post', post_id=post.id) }}" method="post" class="d-inline delete-form" data-post-id="{{ post.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm ms-2 delete-post-btn">
+                            <i class="fas fa-trash-alt"></i> Apagar
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                <div class="comments-section">
+                    <h6 class="mb-3">Comentários</h6>
+                    {% if is_member %}
+                        <form action="{{ url_for('add_comment', post_id=post.id) }}" method="post" class="comment-form">
+                            <textarea name="comment" rows="4" placeholder="Adicionar um comentário..." class="form-control"></textarea>
+                            <button type="submit" class="btn btn-primary btn-sm">Comentar</button>
+                        </form>
+                    {% endif %}
+                    {% for comment in post.comments %}
+                        <div class="comment" data-comment-author-id="{{ comment.user_id }}">
+                            <div class="comment-author d-flex align-items-center mb-2">
+                                <img src="{{ comment.author.avatar_url }}" alt="{{ comment.author.username }}" class="comment-author-avatar">
+                                <span>{{ comment.author.username }}</span>
+                            </div>
+                            <div class="comment-content">
+                                {{ comment.content }}
+                            </div>
+                            <small class="text-muted">{{ comment.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                            {% if current_user.is_authenticated and current_user.id == comment.user_id %}
+                            <form action="{{ url_for('delete_comment', comment_id=comment.id) }}" method="post" class="d-inline delete-form">
+                                <button type="submit" class="btn btn-danger btn-sm ms-2 delete-comment-btn">
+                                    <i class="fas fa-trash-alt"></i> Apagar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Nenhum comentário ainda.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i> Nenhuma postagem ainda. Seja o primeiro a compartilhar algo!
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// JavaScript para apagar postagens e comentários
+document.addEventListener('DOMContentLoaded', function() {
+    const currentUserId = "{{ current_user.id if current_user.is_authenticated else '' }}";
+
+    // Confirmação para apagar postagens
+    document.querySelectorAll('.post-card .delete-post-btn').forEach(button => {
+        const postCard = button.closest('.post-card');
+        const postAuthorId = postCard.querySelector('.post-author-name').dataset.postAuthorId; // Obter ID do data attribute
+        const communityCreatorId = postCard.querySelector('.post-author-name').dataset.communityCreatorId; // Obter ID do data attribute
+
+        if (currentUserId && (currentUserId === postAuthorId || currentUserId === communityCreatorId)) {
+            button.style.display = 'inline-block'; // Mostra o botão se for autor ou líder
+        } else {
+            button.style.display = 'none'; // Esconde o botão caso contrário
+        }
+
+        button.addEventListener('click', function(event) {
+            if (!confirm('Tem certeza que deseja apagar esta postagem?')) {
+                event.preventDefault(); // Impede a ação se o usuário cancelar
+            }
+        });
+    });
+
+    // Confirmação para apagar comentários
+    document.querySelectorAll('.comment .delete-comment-btn').forEach(button => {
+         const commentElement = button.closest('.comment');
+         const commentAuthorId = commentElement.dataset.commentAuthorId; // Obter ID do data attribute
+
+         if (currentUserId && currentUserId === commentAuthorId) {
+              button.style.display = 'inline-block'; // Mostra o botão se for o autor
+         } else {
+              button.style.display = 'none'; // Esconde o botão caso contrário
+         }
+
+         button.addEventListener('click', function(event) {
+             if (!confirm('Tem certeza que deseja apagar este comentário?')) {
+                 event.preventDefault(); // Impede a ação se o usuário cancelar
+             }
+         });
+    });
+});
+
+function updateMediaFileName(input) {
+    const fileNameSpan = document.getElementById('mediaFileName');
+    if (input.files && input.files[0]) {
+        fileNameSpan.textContent = input.files[0].name;
+    } else {
+        fileNameSpan.textContent = 'Nenhum arquivo selecionado.';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Adiciona um manipulador de erro para as imagens de avatar
+    document.querySelectorAll('.post-author-avatar').forEach(img => {
+        img.addEventListener('error', function() {
+            console.warn('Falha ao carregar imagem de avatar:', this.src);
+            // Opcional: substitua por uma imagem padrão ou esconda a tag img
+            this.src = "{{ url_for('static', filename='default_avatar.png') }}"; // Define um avatar padrão em caso de erro
+        });
+    });
+});
+</script>
+{% endblock %} 

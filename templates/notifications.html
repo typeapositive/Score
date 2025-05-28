@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Notificações - SCORE{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">Notificações</h1>
+                    
+                    {% if notifications %}
+                        <div class="list-group">
+                            {% for notification in notifications %}
+                                <div class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <p class="mb-1">{{ notification.content }}</p>
+                                            <small class="text-muted">{{ notification.created_at.strftime('%d/%m/%Y %H:%M') }}</small>
+                                        </div>
+                                        <div>
+                                            {% if notification.type == 'friend_request' %}
+                                                <form action="{{ url_for('accept_friend_request', notification_id=notification.id) }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check"></i> Aceitar
+                                                    </button>
+                                                </form>
+                                                <form action="{{ url_for('reject_friend_request', notification_id=notification.id) }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-times"></i> Recusar
+                                                    </button>
+                                                </form>
+                                            {% elif notification.type == 'community_invite' %}
+                                                <form action="{{ url_for('accept_community_invite', notification_id=notification.id) }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check"></i> Aceitar
+                                                    </button>
+                                                </form>
+                                                <form action="{{ url_for('reject_community_invite', notification_id=notification.id) }}" method="post" class="d-inline">
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-times"></i> Recusar
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                            <form action="{{ url_for('mark_notification_read', notification_id=notification.id) }}" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-check-double"></i> Marcar como lida
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-bell-slash me-2"></i> Você não tem notificações não lidas.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

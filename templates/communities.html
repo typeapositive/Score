@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Comunidades - SCORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/game-search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">Comunidades</h1>
+                    <p class="card-text">Encontre comunidades de jogos ou crie a sua própria!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de busca de jogos para filtrar comunidades -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form action="{{ url_for('communities') }}" method="get" id="filterCommunitiesForm">
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="gameSearchInput" 
+                                   placeholder="Buscar comunidades por jogo..." 
+                                   autocomplete="off"
+                                   value="{% if selected_game_id %}{{ game_name }}{% endif %}">
+                             <button class="btn btn-primary" type="submit" id="filterButton">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                             <!-- Botão para limpar o filtro -->
+                             {% if selected_game_id or search %}
+                             <a href="{{ url_for('communities') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Limpar Filtro
+                            </a>
+                            {% endif %}
+                        </div>
+                        <!-- Campo oculto para o ID do jogo selecionado -->
+                        <input type="hidden" name="game_id" id="selectedGameId" value="{{ selected_game_id or '' }}">
+                        <input type="hidden" name="search" id="textSearch" value="{{ search or '' }}">
+                        <input type="hidden" name="sort" id="sortOrder" value="{{ request.args.get('sort', 'popular') }}">
+                     </form>
+                     <!-- Resultados da busca de jogos -->
+                     <div id="gameSearchResults" class="game-search-results" style="display: none;">
+                         <div class="list-group" id="games_list">
+                             <!-- Resultados da busca de jogos serão inseridos aqui -->
+                         </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Opções de ordenação (visível apenas quando um jogo é selecionado) -->
+    {% if selected_game_id %}
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <span>Comunidades para: <strong>{% if game_name %}{{ game_name }}{% else %}Jogo Selecionado{% endif %}</strong></span>
+                    <div>
+                        Ordenar por:
+                        <a href="{{ url_for('communities', game_id=selected_game_id, sort='popular') }}" 
+                           class="btn btn-sm {% if request.args.get('sort', 'popular') == 'popular' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Mais Populares
+                        </a>
+                        <a href="{{ url_for('communities', game_id=selected_game_id, sort='recent') }}"
+                           class="btn btn-sm {% if request.args.get('sort') == 'recent' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Mais Recentes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Lista de Comunidades -->
+    <div class="row">
+        {% if communities %}
+            {% for community in communities %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <img src="{{ community.game_img }}" class="card-img-top" alt="{{ community.game_name }}">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ community.game_name }}</h5>
+                        <p class="card-text mb-1 text-muted small">
+                            <small class="text-muted">
+                                <i class="fas fa-users"></i> {{ community.member_count }} membros
+                            </small>
+                        </p>
+                        <p class="card-text">{{ community.description }}</p>
+                        <div class="d-grid">
+                            <a href="{{ url_for('community_details', community_id=community.id) }}" class="btn btn-primary">Entrar na Comunidade</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Nenhuma comunidade encontrada. Seja o primeiro a criar uma!
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Botão para criar nova comunidade -->
+    <div class="row mt-4">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('create_community') }}" class="btn btn-success btn-lg">
+                <i class="fas fa-plus-circle"></i> Criar Nova Comunidade
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let searchTimeout;
+    const gameSearchInput = document.getElementById('gameSearchInput');
+    const gameSearchResults = document.getElementById('gameSearchResults');
+    const gamesList = document.getElementById('games_list');
+    const selectedGameIdInput = document.getElementById('selectedGameId');
+    const textSearchInput = document.getElementById('textSearch');
+    const sortOrderInput = document.getElementById('sortOrder');
+    const filterForm = document.getElementById('filterCommunitiesForm');
+
+    // Função para buscar jogos enquanto digita
+    gameSearchInput.addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        if (searchTerm.length < 2) {
+            gameSearchResults.style.display = 'none';
+            gamesList.innerHTML = '';
+            // Limpa o game_id e search quando o campo de busca é esvaziado
+            selectedGameIdInput.value = '';
+            textSearchInput.value = '';
+            return;
+        }
+
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/search_games?q=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(data => {
+                    gamesList.innerHTML = '';
+                    if (data && data.length > 0) {
+                        data.forEach(game => {
+                            const item = document.createElement('div');
+                            item.className = 'game-search-item list-group-item list-group-item-action d-flex align-items-center';
+                            item.innerHTML = `
+                                <img src="${game.img_url}" alt="${game.name}" class="me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                                <div class="game-info">
+                                    <div class="game-name">${game.name}</div>
+                                </div>
+                            `;
+                            item.onclick = () => selectGame(game);
+                            gamesList.appendChild(item);
+                        });
+                        gameSearchResults.style.display = 'block';
+                    } else {
+                        gamesList.innerHTML = '<div class="list-group-item text-muted">Nenhum jogo encontrado.</div>';
+                        gameSearchResults.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao buscar jogos:', error);
+                    gamesList.innerHTML = '<div class="list-group-item text-danger">Ocorreu um erro ao buscar jogos.</div>';
+                    gameSearchResults.style.display = 'block';
+                });
+        }, 300);
+    });
+
+    // Função para selecionar um jogo da lista de sugestões
+    function selectGame(game) {
+        gameSearchInput.value = game.name; // Exibe o nome do jogo no campo de busca
+        selectedGameIdInput.value = game.appid; // Define o game_id oculto
+        textSearchInput.value = ''; // Limpa o campo de busca por texto de comunidade se houver
+        gameSearchResults.style.display = 'none'; // Esconde os resultados da busca
+        
+        // Submete o formulário para filtrar as comunidades por este jogo
+        filterForm.submit();
+    }
+
+    // Esconde os resultados da busca quando clicar fora
+    document.addEventListener('click', function(event) {
+        if (!gameSearchInput.contains(event.target) && !gameSearchResults.contains(event.target)) {
+            gameSearchResults.style.display = 'none';
+        }
+    });
+
+    // Ao submeter o formulário manualmente (clicando no botão Filtrar)
+    filterForm.addEventListener('submit', function(event) {
+        // Se o campo game_id estiver vazio, usa o texto do input para busca por nome de comunidade
+        if (!selectedGameIdInput.value) {
+            textSearchInput.value = gameSearchInput.value;
+        }
+        // Se um jogo foi selecionado via sugestão, o game_id já está preenchido e search é limpo
+    });
+
+    // Preencher o campo de busca de jogo se um game_id já estiver selecionado na URL
+    {% if selected_game_id %}
+    // Precisamos do nome do jogo para preencher o campo de busca
+    // Se selected_game_id está presente, o nome do jogo já deve ter sido passado para o template na rota
+    // Podemos usar uma variável Jinja passada na rota ou fazer uma nova chamada API se necessário
+    // Por enquanto, vamos assumir que game_name está disponível no contexto Jinja quando selected_game_id está presente
+    const initialGameName = "{{ game_name if game_name else '' }}";
+    if (initialGameName) {
+        gameSearchInput.value = initialGameName;
+    }
+    {% elif search %}
+    // Se houver um search de texto (fallback), preenchemos o input com ele
+    gameSearchInput.value = "{{ search }}";
+    {% endif %}
+
+</script>
+{% endblock %} 

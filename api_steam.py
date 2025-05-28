@@ -130,11 +130,13 @@ def search_games(query, limit=10):
         all_games = get_all_steam_games()
         
         #encontrar jogos que combinam com a busca
-        query = query.lower()
         filtered_games = []
         
         for game in all_games:
-            if query in game['name'].lower():
+            game_name_lower = game['name'].lower()
+            query_lower = query.lower()
+            # Verifica se o nome do jogo começa com a query ou contém a query
+            if game_name_lower.startswith(query_lower) or query_lower in game_name_lower:
                 #montar um objeto com as infos necessárias
                 appid = str(game['appid'])
                 filtered_games.append({
