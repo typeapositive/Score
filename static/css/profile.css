@@ -1,81 +1,58 @@
 .profile-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
 }
 
 .profile-header {
-    background-color: #1b2838;
-    border-radius: 1rem;
-    padding: 2rem;
-    margin-bottom: 2rem;
     display: flex;
-    gap: 2rem;
     align-items: center;
-}
-
-.profile-avatar {
-    display: block;
-    max-width: 100%;
-    height: auto;
-}
-
-.profile-avatar:hover {
-    transform: scale(1.05);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
 }
 
 .profile-avatar-container {
     position: relative;
-    flex-shrink: 0;
-    border-radius: 50%;
-    overflow: hidden;
-    background-color: #2a475e;
-    width: 200px;
-    height: 200px;
-    border: 4px solid #66c0f4;
-    box-sizing: border-box;
+    margin-right: 20px;
 }
 
-.profile-avatar-container img {
-    display: block;
-    width: 100%;
-    height: 100%;
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
     object-fit: cover;
-    border-radius: 50%;
-    transition: transform 0.3s ease;
-}
-
-.profile-avatar-container img:hover {
-    transform: scale(1.05);
+    border: 3px solid #5a8ee6;
 }
 
 .profile-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-grow: 1;
 }
 
 .profile-username {
-    color: #66c0f4;
-    font-size: 2.5rem;
-    margin-bottom: 0;
-    margin-right: 1rem;
+    margin: 0 0 5px 0;
+    font-size: 1.8em;
+    color: #fff;
 }
 
 .profile-bio {
-    color: #c7d5e0;
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin-top: 0.5rem;
-    flex-basis: 100%;
+    color: #bbb;
+    margin-bottom: 15px;
+}
+
+.edit-profile-btn {
+    background: none;
+    border: none;
+    color: #5a8ee6;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 1.2em;
 }
 
 .profile-stats {
     display: flex;
-    gap: 2rem;
-    margin-top: 1rem;
+    gap: 20px;
+    color: #fff;
 }
 
 .stat-item {
@@ -83,411 +60,394 @@
 }
 
 .stat-value {
-    color: #66c0f4;
-    font-size: 1.5rem;
+    font-size: 1.1em;
     font-weight: bold;
 }
 
 .stat-label {
-    color: #c7d5e0;
-    font-size: 0.9rem;
+    font-size: 0.9em;
+    color: #bbb;
 }
 
-.favorite-games {
-    margin-top: 2rem;
-}
-
-.favorite-games h3 {
-    color: #66c0f4;
-    margin-bottom: 1rem;
-}
-
-.games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.game-card {
-    background-color: #2a475e;
-    border-radius: 0.5rem;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-}
-
-.game-card:hover {
-    transform: translateY(-5px);
-}
-
-.game-card img {
-    width: 100%;
-    height: 150px;
-    object-fit: cover;
-}
-
-.game-card-info {
-    padding: 1rem;
-}
-
-.game-card-title {
-    color: #c7d5e0;
-    font-size: 1rem;
-    margin: 0;
-}
-
+/* Estilos para as seções */
+.favorite-games,
+.communities-section,
 .timeline {
-    margin-top: 2rem;
+    background-color: #1c2a3a; /* Cor de fundo para destacar a seção */
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #2e4052; /* Borda sutil */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
+.favorite-games h3,
+.communities-section h3,
 .timeline h3 {
-    color: #66c0f4;
-    margin-bottom: 1rem;
+    color: #fff;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
 }
 
-.review-card {
-    background-color: #2a475e;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
+.favorite-games-slots {
+    display: flex; /* Usar flexbox */
+    gap: 15px;
+    flex-wrap: wrap; /* Permite quebrar linha em telas menores */
+    justify-content: center; /* Centraliza os slots */
 }
 
-.review-header {
+.game-slot {
+    width: 120px; /* Tamanho ajustado */
+    height: 120px; /* Tamanho ajustado */
+    border: 2px dashed #5a8ee6; /* Borda tracejada */
     display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.review-game-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 0.5rem;
-}
-
-.review-content {
-    color: #c7d5e0;
-    line-height: 1.6;
-}
-
-.review-rating {
-    color: #ffd700;
-    margin-top: 0.5rem;
-}
-
-.edit-profile-btn {
-    background-color: #66c0f4;
-    color: #1b2838;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-left: 1rem;
-    display: inline-flex;
+    border-radius: 8px;
+    transition: border-color 0.3s ease;
+    position: relative;
+    background-color: transparent; /* Transparente */
+}
+
+.game-slot:hover {
+    border-color: #fff;
+}
+
+.game-slot i {
+    font-size: 2em;
+    color: #5a8ee6;
+}
+
+.game-slot.filled {
+    border-style: solid; /* Borda sólida quando preenchido */
+    padding: 0; /* Remover padding para a imagem preencher */
+}
+
+.game-slot.filled img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Alterado de cover para contain */
+    border-radius: 6px;
+}
+
+.remove-game {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(0, 0, 0, 0.6);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    width: 24px; /* Tamanho ajustado */
+    height: 24px; /* Tamanho ajustado */
+    display: flex;
+    justify-content: center;
     align-items: center;
-    font-size: 1rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+    z-index: 2; /* Garantir que esteja acima da imagem */
 }
 
-.edit-profile-btn:hover {
-    background-color: #1999ff;
+.remove-game:hover {
+    opacity: 1;
 }
 
-.communities-section {
-    margin-top: 2rem;
-}
-
-.communities-section h3 {
-    color: #66c0f4;
-    margin-bottom: 1rem;
+.remove-game i {
+    font-size: 0.9em; /* Tamanho ajustado */
+    color: #fff;
 }
 
 .communities-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.community-card-link {
+    text-decoration: none;
 }
 
 .community-card {
-    background-color: #2a475e;
-    border-radius: 0.5rem;
-    padding: 1.5rem;
+    background-color: #2e4052;
+    border-radius: 8px;
+    overflow: hidden;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    transition: transform 0.2s ease;
+}
+
+.community-card:hover {
+    transform: translateY(-5px);
 }
 
 .community-image {
     width: 80px;
     height: 80px;
     object-fit: cover;
-    border-radius: 0.5rem;
+}
+
+.community-info {
+    padding: 10px;
 }
 
 .community-info h4 {
-    color: #66c0f4;
-    margin: 0;
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+    color: #fff;
 }
 
 .community-info p {
-    color: #c7d5e0;
-    margin: 0.5rem 0 0;
-    font-size: 0.9rem;
+    margin: 0;
+    font-size: 0.9em;
+    color: #bbb;
 }
 
-.favorite-games-slots {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 1rem;
-    margin-top: 1rem;
+.review-card {
+    background-color: #2e4052;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
 }
 
-.game-slot {
-    aspect-ratio: 1;
-    background-color: #2a475e;
-    border: 2px dashed #66c0f4;
-    border-radius: 0.5rem;
+.review-header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 10px;
 }
 
-.game-slot:hover {
-    background-color: #1b2838;
-    border-color: #1999ff;
-}
-
-.game-slot.empty {
-    color: #66c0f4;
-    font-size: 2rem;
-}
-
-.game-slot.filled {
-    border: none;
-    padding: 0;
-}
-
-.game-slot.filled img {
-    width: 100%;
-    height: 100%;
+.review-game-image {
+    width: 60px;
+    height: 60px;
     object-fit: cover;
+    border-radius: 4px;
+    margin-right: 15px;
 }
 
-.game-slot .remove-game {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background-color: rgba(27, 40, 56, 0.8);
-    color: #c7d5e0;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+.review-header h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+    color: #fff;
 }
 
-.game-slot:hover .remove-game {
-    opacity: 1;
+.review-rating i {
+    color: gold;
+    font-size: 1em;
 }
 
-.game-slot .remove-game:hover {
-    background-color: #c7d5e0;
-    color: #1b2838;
+.review-content {
+    color: #ddd;
+    margin-bottom: 10px;
+}
+
+.review-actions small {
+    color: #aaa;
+}
+
+/* Estilos para a modal de busca de jogos */
+#gameSearchModal .modal-content {
+    background-color: #1c2a3a;
+    color: #fff;
+}
+
+#gameSearchModal .modal-header {
+    border-bottom: 1px solid #333;
+}
+
+#gameSearchModal .modal-title {
+    color: #fff;
+}
+
+#gameSearchModal .btn-close {
+    filter: invert(1);
+}
+
+#gameSearchModal .form-control {
+    background-color: #2e4052;
+    border: 1px solid #5a8ee6;
+    color: #fff;
+}
+
+#gameSearchModal .form-control::placeholder {
+    color: #bbb;
 }
 
 .game-search-results {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: #1b2838;
-    border: 1px solid #66c0f4;
-    border-radius: 0.5rem;
     max-height: 300px;
     overflow-y: auto;
-    z-index: 1000;
-    margin-top: 0.5rem;
+    margin-top: 10px;
+    border: 1px solid #333;
+    border-radius: 4px;
 }
 
 .game-search-item {
-    padding: 0.75rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    border: none;
+    background-color: transparent;
+    color: #fff;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    padding: 10px 15px;
+    border-bottom: 1px solid #333;
+}
+
+.game-search-item:last-child {
+    border-bottom: none;
 }
 
 .game-search-item:hover {
-    background-color: #2a475e;
+    background-color: #2e4052;
 }
 
 .game-search-item img {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 0.25rem;
-}
-
-.game-search-item .game-info {
-    flex: 1;
+    border-radius: 4px;
+    margin-right: 10px; /* Espaçamento ajustado */
 }
 
 .game-search-item .game-name {
-    color: #66c0f4;
-    margin: 0;
-    font-size: 0.9rem;
+    font-weight: bold;
 }
 
-.game-search-item .game-price {
-    color: #c7d5e0;
-    font-size: 0.8rem;
-    margin: 0;
+.text-muted {
+    color: #aaa !important;
 }
 
+.text-danger {
+    color: #f00 !important;
+}
+
+/* File Upload styles */
 .file-upload-container {
-    position: relative;
-    margin-bottom: 1rem;
+    margin-bottom: 15px;
+    border: 2px dashed #5a8ee6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.file-upload-container:hover {
+    border-color: #fff;
 }
 
 .file-upload-input {
-    position: absolute;
-    left: 0;
-    top: 0;
-    opacity: 0;
-    width: 100%;
-    height: 100%;
-    cursor: pointer;
-}
-
-.file-upload-label {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    background-color: #2a475e;
-    border: 2px dashed #66c0f4;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.file-upload-label:hover {
-    background-color: #1b2838;
-    border-color: #1999ff;
-}
-
-.file-upload-icon {
-    font-size: 2rem;
-    color: #66c0f4;
-    margin-bottom: 1rem;
-}
-
-.file-upload-text {
-    color: #c7d5e0;
-    text-align: center;
-}
-
-.file-upload-preview {
-    margin-top: 1rem;
-    max-width: 200px;
-    border-radius: 0.5rem;
     display: none;
 }
 
-.file-upload-preview img {
-    width: 100%;
-    height: auto;
-    border-radius: 0.5rem;
-}
-
-.community-card-link {
-    text-decoration: none;
-    color: inherit;
+.file-upload-label {
     display: block;
-    transition: transform 0.3s ease;
-}
-
-.community-card-link:hover {
-    transform: translateY(-5px);
-}
-
-.invite-community-btn {
-    background-color: #2a475e;
-    color: #66c0f4;
-    border: none;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
     cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-left: 1rem;
-    display: inline-flex;
-    align-items: center;
-    font-size: 1rem;
+    color: #5a8ee6;
 }
 
-.invite-community-btn:hover {
-    background-color: #1b2838;
-    color: #1999ff;
+.file-upload-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.file-upload-text {
+    font-size: 1.1em;
+}
+
+.file-upload-preview {
+    display: none;
+    margin-top: 15px;
+}
+
+.file-upload-preview img {
+    max-width: 100px;
+    height: auto;
+    border-radius: 50%;
+}
+
+/* Invite Community Modal Styles */
+.invite-community-btn {
+    background: none;
+    border: none;
+    color: #5a8ee6;
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 1.2em;
 }
 
 .invite-community-item {
     display: flex;
     align-items: center;
-    padding: 0.75rem 1.25rem;
-    margin-bottom: 0.5rem;
-    background-color: #2a475e;
-    border: 1px solid #1b2838;
-    border-radius: 0.5rem;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    color: #c7d5e0;
 }
 
 .invite-community-item:hover {
-    background-color: #1b2838;
-    transform: translateX(5px);
+    background-color: #2e4052;
 }
 
 .invite-community-item img {
-    border-radius: 0.25rem;
-    margin-right: 1rem;
-    width: 40px;
-    height: 40px;
-    object-fit: cover;
+    width: 40px; /* Tamanho ajustado para ser um pouco maior */
+    height: 40px; /* Tamanho ajustado */
+    object-fit: cover; /* Manter cover para garantir que preencha o espaço sem distorção excessiva */
+    border-radius: 4px;
+    margin-right: 10px;
 }
 
+.username-and-edit {
+    display: flex;
+    align-items: center;
+    /* Adicione um pequeno espaço entre o nome de usuário e o botão, se necessário */
+    gap: 10px; 
+}
+
+/* Estilos para a modal de Convite para Comunidade */
 #inviteCommunityModal .modal-content {
-    background-color: #1b2838;
-    color: #c7d5e0;
-    border: 1px solid #66c0f4;
-    border-radius: 1rem;
+    background-color: #1c2a3a !important; /* Fundo escuro */
+    color: #fff !important; /* Texto branco */
+    border: 1px solid #333 !important; /* Borda escura */
 }
 
 #inviteCommunityModal .modal-header {
-    border-bottom: 1px solid #2a475e;
+    border-bottom: 1px solid #333 !important; /* Borda escura */
+    background-color: #1c2a3a !important; /* Garante fundo escuro no cabeçalho */
 }
 
 #inviteCommunityModal .modal-title {
-    color: #66c0f4;
+    color: #fff !important; /* Título branco */
 }
 
 #inviteCommunityModal .btn-close {
-    filter: invert(1);
+    filter: invert(1) !important; /* Ícone de fechar branco */
 }
 
-#inviteCommunityModal .list-group {
-    list-style: none;
-    padding: 0;
-    margin-top: 1rem;
+#inviteCommunityModal .modal-body {
+    color: #ddd !important; /* Cor do texto do corpo */
+    background-color: #1c2a3a !important; /* Garante fundo escuro no corpo */
+}
+
+#inviteCommunityModal .modal-footer {
+    border-top: 1px solid #333 !important; /* Borda escura */
+    background-color: #1c2a3a !important; /* Garante fundo escuro no rodapé, se existir */
+}
+
+#inviteCommunityModal .list-group-item {
+    background-color: transparent !important; /* Fundo transparente */
+    border-color: #333 !important; /* Borda escura */
+    color: #fff !important; /* Texto branco */
+}
+
+#inviteCommunityModal .list-group-item:hover {
+    background-color: #2e4052 !important; /* Fundo escuro ao passar o mouse */
+}
+
+/* Ajuste para o texto dentro do modal-body, como parágrafos */
+#inviteCommunityModal .modal-body p {
+    color: #ddd !important;
+}
+
+/* Garante que a imagem da comunidade/jogo na lista esteja correta */
+.invite-community-item img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 10px;
 } 

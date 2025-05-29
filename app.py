@@ -15,13 +15,19 @@ import requests
 import sqlite3
 import api_steam as steam_api
 from werkzeug.utils import secure_filename
+from pytz import UTC
 
 # Configuração do aplicativo
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave-secreta-do-avaliador-de-jogos'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+
+# Garante que o diretório de uploads existe
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
+    print(f"Diretório de uploads criado em: {app.config['UPLOAD_FOLDER']}")
 
 # Inicialização do SQLAlchemy
 db = SQLAlchemy(app)
@@ -41,13 +47,14 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
-    avatar_url = db.Column(db.String(200), default='static/default_avatar.png')
+    avatar_url = db.Column(db.String(200), default='static/uploads/default.png')
     bio = db.Column(db.Text)
     favorite_games = db.Column(db.String(500))  # Armazenará IDs dos jogos favoritos separados por vírgula
     reviews = db.relationship('Review', backref='author', lazy=True)
     posts = db.relationship('Post', backref='author', lazy=True)
     comments = db.relationship('Comment', backref='author', lazy=True)
     communities = db.relationship('CommunityMember', backref='user', lazy=True)
+    review_responses = db.relationship('ReviewResponse', backref='author', lazy=True)
 
     def set_password(self, password):
         """Gera o hash da senha e armazena no objeto."""
@@ -83,9 +90,9 @@ class Community(db.Model):
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    posts = db.relationship('Post', backref='community', lazy=True)
-    members = db.relationship('CommunityMember', backref='community', lazy=True)
-    invitations = db.relationship('CommunityInvitation', backref='community', lazy=True)
+    posts = db.relationship('Post', backref='community', lazy=True, cascade='all, delete-orphan')
+    members = db.relationship('CommunityMember', backref='community', lazy=True, cascade='all, delete-orphan')
+    invitations = db.relationship('CommunityInvitation', backref='community', lazy=True, cascade='all, delete-orphan')
 
 class CommunityMember(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -151,6 +158,13 @@ class ReviewVote(db.Model):
     type = db.Column(db.String(10), nullable=False) # 'like' ou 'dislike'
     __table_args__ = (db.UniqueConstraint('user_id', 'review_id', name='_user_review_uc'),)
 
+class ReviewResponseVote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    response_id = db.Column(db.Integer, db.ForeignKey('review_response.id'), nullable=False)
+    type = db.Column(db.String(10), nullable=False) # 'like' ou 'dislike'
+    __table_args__ = (db.UniqueConstraint('user_id', 'response_id', name='_user_response_uc'),)
+
 @login_manager.user_loader
 def load_user(user_id):
     """
@@ -175,9 +189,22 @@ def game_details(appid):
     Exibe informações do jogo e avaliações dos usuários.
     """
     game = steam_api.get_game_details(appid)
-    reviews = Review.query.filter_by(game_id=appid).order_by(Review.date_posted.desc()).all()
+    
+    page = request.args.get('page', 1, type=int)
+    sort_by = request.args.get('sort', 'recent') # Adiciona suporte para ordenação
+
+    query = Review.query.filter_by(game_id=appid)
+
+    # Aplica a ordenação
+    if sort_by == 'popular':
+        query = query.order_by(Review.likes.desc(), Review.date_posted.desc())
+    else: # 'recent' (padrão)
+        query = query.order_by(Review.date_posted.desc())
+
+    reviews = query.paginate(page=page, per_page=10) # Pagina as avaliações
+
     community = Community.query.filter_by(game_id=appid).first()
-    return render_template('game.html', game=game, reviews=reviews, community=community)
+    return render_template('game.html', game=game, reviews=reviews, community=community, sort_by=sort_by) # Passa sort_by também
 
 @app.route('/review/<appid>', methods=['GET', 'POST'])
 @login_required
@@ -212,20 +239,70 @@ def forum():
     """
     Página do fórum que lista todas as avaliações publicadas.
     """
-    reviews = Review.query.order_by(Review.date_posted.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    sort_by = request.args.get('sort', 'recent') # Padrão: mais recentes
+    filter_by = request.args.get('filter') # Novo parâmetro de filtro
+
+    query = Review.query
+
+    # Aplica o filtro por amigos, se solicitado e usuário autenticado
+    if filter_by == 'friends' and current_user.is_authenticated:
+        # Busca os IDs dos amigos do usuário logado
+        friendships = Friendship.query.filter(
+            ((Friendship.user_id == current_user.id) | (Friendship.friend_id == current_user.id)) &
+            (Friendship.status == 'accepted')
+        ).all()
+        
+        friend_ids = []
+        for friendship in friendships:
+            if friendship.user_id == current_user.id:
+                friend_ids.append(friendship.friend_id)
+            else:
+                friend_ids.append(friendship.user_id)
+        
+        # Inclui o próprio usuário nas avaliações de amigos (opcional, mas comum em timelines)
+        # friend_ids.append(current_user.id)
+        
+        # Filtra as avaliações pelos IDs dos amigos
+        if friend_ids:
+            query = query.filter(Review.user_id.in_(friend_ids))
+        else:
+            # Se não houver amigos, retorna uma lista vazia de avaliações
+            # reviews = Review.query.filter(Review.user_id == None).paginate(page=page, per_page=10) # Query que retorna vazio
+            # Uma alternativa mais limpa é retornar uma paginação vazia se não houver amigos.
+            reviews = Review.query.filter(Review.id == None).paginate(page=page, per_page=10) # Garante query vazia
+
+            # Adiciona as imagens dos jogos às avaliações (para a lista vazia, não fará nada)
+            for review in reviews.items:
+                game = steam_api.get_game_details(review.game_id)
+                if game:
+                    review.game_img = game.get('img_url', '')
+            print(f"DEBUG: Tipo de reviews antes de renderizar forum.html (filtro amigos, sem amigos): {type(reviews)}") # Log de depuração
+            return render_template('forum.html', reviews=reviews, sort_by=sort_by, filter_by=filter_by, steam_api=steam_api)
+
+    # Aplica a ordenação
+    if sort_by == 'popular':
+        query = query.order_by(Review.likes.desc(), Review.date_posted.desc())
+    else: # 'recent'
+        query = query.order_by(Review.date_posted.desc())
+
+    reviews = query.paginate(page=page, per_page=10)
     
     # Adiciona as imagens dos jogos às avaliações
-    for review in reviews:
+    for review in reviews.items:
         game = steam_api.get_game_details(review.game_id)
         if game:
             review.game_img = game.get('img_url', '')
+            
+    print(f"DEBUG: Tipo de reviews antes de renderizar forum.html: {type(reviews)}") # Log de depuração
     
-    return render_template('forum.html', reviews=reviews)
+    return render_template('forum.html', reviews=reviews, sort_by=sort_by, filter_by=filter_by, steam_api=steam_api)
 
 @app.route('/communities')
 def communities():
     search = request.args.get('search', '')
     game_id = request.args.get('game_id')
+    sort_by = request.args.get('sort', 'popular') # Padrão: mais populares
 
     query = db.session.query(Community, db.func.count(CommunityMember.id).label('members_count')) \
         .outerjoin(CommunityMember) \
@@ -235,37 +312,11 @@ def communities():
         query = query.filter(Community.game_name.ilike(f'%{search}%'))
     elif game_id:
         query = query.filter(Community.game_id == game_id)
-    else:
-        # Se não houver busca nem filtro por jogo, ordena por popularidade (contagem de membros)
-        query = query.order_by(db.desc('members_count'))
 
-    # Aplica a ordenação final com base nos parâmetros
-    sort_order = request.args.get('sort', 'popular')
-    if game_id and sort_order == 'recent':
+    # Aplica a ordenação com base no parâmetro sort_by
+    if sort_by == 'recent':
         query = query.order_by(db.desc(Community.created_at))
-    elif game_id and sort_order == 'popular':
-        query = query.order_by(db.desc('members_count'))
-    # Se não houver game_id, a ordenação padrão já é por popularidade na cláusula else acima
-    # Se houver search, a ordenação padrão será por data de criação, a menos que sort=popular seja especificado
-    # A lógica atual de sort.key depois do query.all() é um pouco confusa e pode ser movida para a query
-
-    # Refazendo a lógica de ordenação para ser aplicada diretamente na query
-    if game_id:
-        sort_order = request.args.get('sort', 'recent') # Padrão para filtro por jogo é recente
-        if sort_order == 'recent':
-            query = query.order_by(db.desc(Community.created_at))
-        else: # popular
-            query = query.order_by(db.desc('members_count'))
-    elif search:
-        # Para busca por texto, o padrão é mais recente, a menos que sort=popular
-        sort_order = request.args.get('sort', 'recent')
-        if sort_order == 'recent':
-            query = query.order_by(db.desc(Community.created_at))
-        else: # popular
-            # Calcular popularidade para busca por texto também
-            query = query.order_by(db.desc('members_count'))
-    else:
-        # Sem filtro, padrão é mais popular
+    else: # 'popular' (padrão)
         query = query.order_by(db.desc('members_count'))
 
     communities_with_counts = query.all()
@@ -274,24 +325,57 @@ def communities():
     communities = []
     for community, member_count in communities_with_counts:
         community.member_count = member_count
+        
+        # Verifica se o usuário logado é membro desta comunidade
+        is_member = False
+        if current_user.is_authenticated:
+            is_member = CommunityMember.query.filter_by(
+                user_id=current_user.id,
+                community_id=community.id
+            ).first() is not None
+        community.is_member = is_member # Adiciona a informação ao objeto community
+
         communities.append(community)
 
+    # Adiciona logs de depuração para verificar a ordenação e status de membro
+    print(f"DEBUG: Comunidades ordenadas por {sort_by} com status de membro:")
+    for comm in communities:
+        print(f" - {comm.name} (Membros: {getattr(comm, 'member_count', 'N/A')}, Criada: {comm.created_at}, Membro: {getattr(comm, 'is_member', 'N/A')})")
+
     return render_template('communities.html', 
-                           communities=communities, 
-                           search=search, 
-                           selected_game_id=game_id)
+                           communities=communities,
+                           search=search,
+                           selected_game_id=game_id,
+                           sort_by=sort_by) # Passa sort_by para o template
 
 @app.route('/community/<int:community_id>')
 def community_details(community_id):
     community = Community.query.get_or_404(community_id)
-    posts = Post.query.filter_by(community_id=community_id).order_by(Post.created_at.desc()).all()
+    
+    page = request.args.get('page', 1, type=int)
+    sort_by = request.args.get('sort', 'recent') # Padrão: mais recentes
+    
+    query = Post.query.filter_by(community_id=community_id)
+    
+    if sort_by == 'popular':
+        query = query.order_by(Post.likes.desc(), Post.created_at.desc())
+    else: # 'recent'
+        query = query.order_by(Post.created_at.desc())
+        
+    posts = query.paginate(page=page, per_page=10) # Paginação
+
     is_member = False
     if current_user.is_authenticated:
         is_member = CommunityMember.query.filter_by(
             user_id=current_user.id,
             community_id=community_id
         ).first() is not None
-    return render_template('community_details.html', community=community, posts=posts, is_member=is_member)
+        
+    return render_template('community_details.html', 
+                           community=community, 
+                           posts=posts, 
+                           is_member=is_member, 
+                           sort_by=sort_by)
 
 @app.route('/community/<int:community_id>/join', methods=['POST'])
 @login_required
@@ -303,15 +387,50 @@ def join_community(community_id):
         flash('Você agora é membro desta comunidade!', 'success')
     return redirect(url_for('community_details', community_id=community_id))
 
+@app.route('/community/<int:community_id>/delete', methods=['POST'])
+@login_required
+def delete_community(community_id):
+    community = Community.query.get_or_404(community_id)
+
+    # Verifica se o usuário logado é o criador da comunidade
+    if community.creator_id != current_user.id:
+        flash('Você não tem permissão para apagar esta comunidade.', 'danger')
+        return redirect(url_for('community_details', community_id=community.id))
+
+    try:
+        db.session.delete(community)
+        db.session.commit()
+        flash('Comunidade apagada com sucesso!', 'success')
+        return redirect(url_for('communities')) # Redireciona para a página geral de comunidades
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Erro ao apagar a comunidade: {e}', 'danger')
+        return redirect(url_for('community_details', community_id=community.id))
+
 @app.route('/community/<int:community_id>/leave', methods=['POST'])
 @login_required
 def leave_community(community_id):
+    # Verifica se o usuário não é o criador antes de permitir sair
+    community = Community.query.get_or_404(community_id)
+    if community.creator_id == current_user.id:
+        flash('O criador não pode sair da própria comunidade. Considere apagá-la.', 'warning')
+        return redirect(url_for('community_details', community_id=community_id))
+
     member = CommunityMember.query.filter_by(user_id=current_user.id, community_id=community_id).first()
+
     if member:
-        db.session.delete(member)
-        db.session.commit()
-        flash('Você saiu da comunidade.', 'info')
-    return redirect(url_for('community_details', community_id=community_id))
+        try:
+            db.session.delete(member)
+            db.session.commit()
+            flash('Você saiu da comunidade.', 'info')
+            return redirect(url_for('community_details', community_id=community_id)) # Redireciona de volta para a página da comunidade
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Erro ao sair da comunidade: {e}', 'danger')
+            return redirect(url_for('community_details', community_id=community_id))
+    else:
+        flash('Você não é membro desta comunidade.', 'warning')
+        return redirect(url_for('community_details', community_id=community_id))
 
 @app.route('/community/<int:community_id>/post', methods=['POST'])
 @login_required
@@ -326,23 +445,40 @@ def create_post(community_id):
     
     media_url = None
     media_type = None
-    
-    if media:
+
+    if media and media.filename:
+        # Verifica a extensão do arquivo
         filename = secure_filename(media.filename)
-        file_ext = filename.rsplit('.', 1)[1].lower()
+        file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
         
         if file_ext in ['jpg', 'jpeg', 'png', 'gif']:
             media_type = 'image'
         elif file_ext in ['mp4', 'webm']:
             media_type = 'video'
         else:
-            flash('Formato de arquivo não suportado', 'danger')
+            flash('Formato de arquivo não suportado. Use imagens (jpg, jpeg, png, gif) ou vídeos (mp4, webm).', 'danger')
             return redirect(url_for('community_details', community_id=community_id))
         
-        media_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        media.save(media_path)
-        media_url = f'uploads/{filename}'
-    
+        # Gera um nome único para o arquivo
+        unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
+        
+        # Salva o arquivo
+        try:
+            media_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            media.save(media_path)
+            media_url = f'uploads/{unique_filename}'
+            print(f"Arquivo salvo em: {media_path}")
+            print(f"URL da mídia: {media_url}")
+        except Exception as e:
+            print(f"Erro ao salvar arquivo: {str(e)}")
+            flash('Erro ao salvar o arquivo de mídia.', 'danger')
+            return redirect(url_for('community_details', community_id=community_id))
+
+    elif not content:
+        flash('O post não pode estar vazio.', 'danger')
+        return redirect(url_for('community_details', community_id=community_id))
+
+    # Cria o post
     post = Post(
         content=content,
         media_url=media_url,
@@ -404,16 +540,49 @@ def delete_review(review_id):
 @login_required
 def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
-    # Verifica se o usuário logado é o autor da postagem
-    community = Community.query.get(post.community_id)
-    if post.user_id != current_user.id and (not community or community.creator_id != current_user.id):
+    community = Community.query.get_or_404(post.community_id)
+    # Verifica se o usuário é o autor do post ou o criador da comunidade
+    if post.user_id != current_user.id and community.creator_id != current_user.id:
         flash('Você não tem permissão para apagar esta postagem.', 'danger')
-        return redirect(url_for('community_details', community_id=post.community_id))
-
+        return redirect(url_for('community_details', community_id=community.id))
+    
     db.session.delete(post)
     db.session.commit()
-    flash('Postagem apagada com sucesso.', 'success')
-    return redirect(url_for('community_details', community_id=post.community_id))
+    flash('Postagem apagada com sucesso!', 'success')
+    return redirect(url_for('community_details', community_id=community.id))
+
+@app.route('/response/<int:response_id>/delete', methods=['POST'])
+@login_required
+def delete_response(response_id):
+    print(f"Tentativa de apagar resposta {response_id} pelo usuário {current_user.username}")
+    response = ReviewResponse.query.get_or_404(response_id)
+    # Verifica se o usuário logado é o autor da resposta
+    if response.user_id != current_user.id:
+        print(f"Usuário {current_user.username} não é o autor da resposta {response_id}.")
+        flash('Você não tem permissão para apagar esta resposta.', 'danger')
+        # Redireciona de volta para a página do jogo da avaliação associada
+        review = Review.query.get(response.review_id)
+        if review:
+            print(f"Redirecionando para game_details {review.game_id} após falha de permissão.")
+            return redirect(url_for('game_details', appid=review.game_id))
+        else:
+            print("Redirecionando para index após falha de permissão (review não encontrada).")
+            # Fallback se a avaliação associada não for encontrada
+            return redirect(url_for('index')) # Ou outra página apropriada
+
+    db.session.delete(response)
+    db.session.commit()
+    print(f"Resposta {response_id} apagada com sucesso.")
+    flash('Resposta apagada com sucesso!', 'success')
+    # Redireciona de volta para a página do jogo da avaliação associada
+    review = Review.query.get(response.review_id)
+    if review:
+        print(f"Redirecionando para game_details {review.game_id} após sucesso na exclusão.")
+        return redirect(url_for('game_details', appid=review.game_id))
+    else:
+        print("Redirecionando para index após sucesso na exclusão (review não encontrada).")
+        # Fallback se a avaliação associada não for encontrada
+        return redirect(url_for('index')) # Ou outra página apropriada
 
 @app.route('/api/search_games')
 def api_search_games():
@@ -435,7 +604,7 @@ def update_database():
     with app.app_context():
         # Adiciona a coluna avatar_url se ela não existir
         try:
-            db.engine.execute('ALTER TABLE user ADD COLUMN avatar_url VARCHAR(200) DEFAULT "static/default_avatar.png"')
+            db.engine.execute('ALTER TABLE user ADD COLUMN avatar_url VARCHAR(200) DEFAULT "static/uploads/default.png"')
         except Exception as e:
             print(f"Erro ao adicionar coluna avatar_url: {e}")
 
@@ -541,11 +710,11 @@ def create_community():
         name = request.form.get('name')
         description = request.form.get('description')
         
-        # Verifica se já existe uma comunidade para este jogo
-        existing_community = Community.query.filter_by(game_id=game_id).first()
-        if existing_community:
-            flash('Já existe uma comunidade para este jogo.', 'warning')
-            return redirect(url_for('community_details', community_id=existing_community.id))
+        # Remove a verificação de comunidade existente para permitir várias comunidades por jogo
+        # existing_community = Community.query.filter_by(game_id=game_id).first()
+        # if existing_community:
+        #     flash('Já existe uma comunidade para este jogo.', 'warning')
+        #     return redirect(url_for('community_details', community_id=existing_community.id))
         
         # Cria a nova comunidade
         community = Community(
@@ -728,17 +897,55 @@ def send_friend_request(username):
 @login_required
 def like_response(response_id):
     response = ReviewResponse.query.get_or_404(response_id)
-    response.likes += 1
+    user_id = current_user.id
+
+    existing_vote = ReviewResponseVote.query.filter_by(user_id=user_id, response_id=response_id).first()
+
+    if existing_vote:
+        if existing_vote.type == 'like':
+            # Usuário já deu like, remove o like
+            db.session.delete(existing_vote)
+            response.likes -= 1
+        else:
+            # Usuário deu dislike, muda para like
+            existing_vote.type = 'like'
+            response.dislikes -= 1
+            response.likes += 1
+    else:
+        # Usuário não votou, adiciona like
+        new_vote = ReviewResponseVote(user_id=user_id, response_id=response_id, type='like')
+        db.session.add(new_vote)
+        response.likes += 1
+
     db.session.commit()
-    return redirect(url_for('game_details', appid=response.review.game_id))
+    return jsonify({'likes': response.likes, 'dislikes': response.dislikes})
 
 @app.route('/response/<int:response_id>/dislike', methods=['POST'])
 @login_required
 def dislike_response(response_id):
     response = ReviewResponse.query.get_or_404(response_id)
-    response.dislikes += 1
+    user_id = current_user.id
+
+    existing_vote = ReviewResponseVote.query.filter_by(user_id=user_id, response_id=response_id).first()
+
+    if existing_vote:
+        if existing_vote.type == 'dislike':
+            # Usuário já deu dislike, remove o dislike
+            db.session.delete(existing_vote)
+            response.dislikes -= 1
+        else:
+            # Usuário deu like, muda para dislike
+            existing_vote.type = 'dislike'
+            response.likes -= 1
+            response.dislikes += 1
+    else:
+        # Usuário não votou, adiciona dislike
+        new_vote = ReviewResponseVote(user_id=user_id, response_id=response_id, type='dislike')
+        db.session.add(new_vote)
+        response.dislikes += 1
+
     db.session.commit()
-    return redirect(url_for('game_details', appid=response.review.game_id))
+    return jsonify({'likes': response.likes, 'dislikes': response.dislikes})
 
 @app.route('/friend_request/<int:notification_id>/accept', methods=['POST'])
 @login_required
@@ -835,25 +1042,45 @@ def profile(username):
     communities = [member.community for member in user.communities]
     
     # Busca amigos
-    friendships = Friendship.query.filter(
-        ((Friendship.user_id == user.id) | (Friendship.friend_id == user.id)) &
-        (Friendship.status == 'accepted')
-    ).all()
+    friendships_query = Friendship.query.filter(
+        ((Friendship.user_id == user.id) & (Friendship.friend_id == user.id)) |  # Amizade aceita
+        ((Friendship.user_id == user.id) | (Friendship.friend_id == user.id)) # Amizade aceita
+    )
     
+    # Busca a relação de amizade entre o usuário logado e o usuário do perfil
+    friendship_status = 'not_friends'
+    if current_user.is_authenticated and current_user.id != user.id:
+        existing_friendship = Friendship.query.filter(
+            ((Friendship.user_id == current_user.id) & (Friendship.friend_id == user.id)) |
+            ((Friendship.user_id == user.id) & (Friendship.friend_id == current_user.id))
+        ).first()
+        
+        if existing_friendship:
+            if existing_friendship.status == 'accepted':
+                friendship_status = 'friends'
+            elif existing_friendship.user_id == current_user.id and existing_friendship.status == 'pending':
+                friendship_status = 'pending_sent'
+            elif existing_friendship.friend_id == current_user.id and existing_friendship.status == 'pending':
+                friendship_status = 'pending_received'
+
+
     friends = []
-    for friendship in friendships:
-        if friendship.user_id == user.id:
-            friend = User.query.get(friendship.friend_id)
-        else:
-            friend = User.query.get(friendship.user_id)
-        friends.append(friend)
-    
+    for friendship in friendships_query.all():
+        if friendship.status == 'accepted': # Considera apenas amizades aceitas para a lista de amigos
+            if friendship.user_id == user.id:
+                friend = User.query.get(friendship.friend_id)
+            else:
+                friend = User.query.get(friendship.user_id)
+            friends.append(friend)
+
+
     return render_template('profile.html', 
                          user=user, 
                          reviews=reviews, 
                          communities=communities,
                          friends=friends,
-                         steam_api=steam_api)
+                         steam_api=steam_api,
+                         friendship_status=friendship_status)
 
 @app.route('/update_profile', methods=['POST'])
 @login_required

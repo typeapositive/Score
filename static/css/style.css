@@ -1,0 +1,48 @@
+body {
+    background-color: #1b2838;
+    color: #c7d5e0;
+    font-family: 'Open Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.navbar {
+    background-color: #171a21 !important;
+}
+
+.card {
+    background-color: #2a475e;
+    color: #c7d5e0;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.btn-primary {
+    background-color: #1b6d85;
+    border-color: #1b6d85;
+}
+
+.btn-primary:hover {
+    background-color: #127a9c;
+    border-color: #127a9c;
+}
+
+footer {
+    background-color: #171a21;
+    margin-top: auto;
+}
+
+.game-card {
+    transition: transform 0.3s;
+}
+
+.game-card:hover {
+    transform: scale(1.05);
+}
+
+.star-rating {
+    color: #ffd700;
+}
+
+/* Adicionar estilos para tipografia e outros elementos globais aqui */ 

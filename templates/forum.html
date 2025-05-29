@@ -10,14 +10,51 @@
 <div class="container">
     <h1 class="mb-4">Fórum de Avaliações</h1>
 
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Avaliações</h4>
+        <div>
+            {# Dropdown de Filtro e Ordenação #}
+            <div class="dropdown">
+                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="forumFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-filter me-1"></i> Filtrar/Ordenar
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="forumFilterDropdown">
+                    <li><h6 class="dropdown-header">Ordenar por:</h6></li>
+                    <li><a class="dropdown-item {% if sort_by == 'recent' and not filter_by %}active{% endif %}" href="{{ url_for('forum', sort='recent', page=reviews.page, filter=filter_by) }}">Mais Recentes</a></li>
+                    <li><a class="dropdown-item {% if sort_by == 'popular' and not filter_by %}active{% endif %}" href="{{ url_for('forum', sort='popular', page=reviews.page, filter=filter_by) }}">Mais Populares</a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><h6 class="dropdown-header">Filtrar por:</h6></li>
+                    <li><a class="dropdown-item {% if filter_by == 'friends' %}active{% endif %}" href="{{ url_for('forum', filter='friends', sort=sort_by, page=reviews.page) }}">Amigos</a></li>
+                    {# Adicionar opção para remover filtro, se houver um ativo #}
+                    {% if filter_by %}
+                    <li><a class="dropdown-item" href="{{ url_for('forum', sort=sort_by, page=reviews.page) }}">Mostrar Todos</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
     <div class="reviews">
-        {% for review in reviews %}
+        {% for review in reviews.items %}
             <div class="review-card">
                 <div class="review-header">
                     <div class="review-game-info">
                         <img src="{{ review.game_img }}" alt="{{ review.game_name }}" class="review-game-image">
                         <div>
-                            <h5 class="review-game-name">{{ review.game_name }}</h5>
+                            <div class="d-flex justify-content-between align-items-start w-100">
+                                <h5 class="review-game-name">
+                                    <a href="{{ url_for('review_game', appid=review.game_id) }}" class="text-decoration-none">
+                                        {{ review.game_name }}
+                                    </a>
+                                </h5>
+                                {% if current_user.is_authenticated and current_user.id == review.user_id %}
+                                <form action="{{ url_for('delete_review', review_id=review.id) }}" method="post" class="delete-form ms-auto">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash-alt"></i> Apagar Avaliação
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                             <p class="review-rating">
                                 {% for i in range(review.rating) %}
                                     <i class="fas fa-star"></i>
@@ -61,37 +98,43 @@
                     {% for response in review.responses %}
                         <div class="response-card">
                             <div class="response-header">
-                                <img src="{{ response.author.avatar_url }}" alt="{{ response.author.username }}" class="response-author-avatar">
+                                <img src="{{ url_for('static', filename=response.author.avatar_url) }}" alt="{{ response.author.username }}" class="response-author-avatar me-2">
                                 <div>
-                                    <h6 class="response-author-name">{{ response.author.username }}</h6>
-                                    <p class="response-date">{{ response.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                                    <h6 class="response-author-name mb-1">
+                                        <a href="{{ url_for('profile', username=response.author.username) }}" class="text-decoration-none text-light">
+                                            {{ response.author.username }}
+                                        </a>
+                                    </h6>
+                                    <p class="response-date text-muted">{{ response.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
                                 </div>
                             </div>
                             <div class="response-content">
                                 {{ response.content }}
                             </div>
-                            <div class="review-actions">
-                                <form action="{{ url_for('like_response', response_id=response.id) }}" method="post" class="d-inline">
-                                    <button type="submit" class="post-action-btn">
-                                        <i class="fas fa-thumbs-up"></i> Curtir ({{ response.likes }})
+                            <div class="response-actions d-flex justify-content-between align-items-center mt-2">
+                                <div class="d-flex">
+                                    <form action="{{ url_for('like_response', response_id=response.id) }}" method="post" class="me-2">
+                                        <button type="submit" class="post-action-btn btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-thumbs-up"></i> Útil ({{ response.likes }})
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('dislike_response', response_id=response.id) }}" method="post">
+                                        <button type="submit" class="post-action-btn btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-thumbs-down"></i> Inútil ({{ response.dislikes }})
+                                        </button>
+                                    </form>
+                                </div>
+                                {% if current_user.is_authenticated and current_user.id == response.user_id %}
+                                <form action="{{ url_for('delete_response', response_id=response.id) }}" method="post" class="delete-response-form ms-auto">
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash-alt"></i> Apagar
                                     </button>
                                 </form>
-                                <form action="{{ url_for('dislike_response', response_id=response.id) }}" method="post" class="d-inline">
-                                    <button type="submit" class="post-action-btn">
-                                        <i class="fas fa-thumbs-down"></i> Não Curtir ({{ response.dislikes }})
-                                    </button>
-                                </form>
+                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
                 </div>
-                {% if current_user.is_authenticated and current_user.id == review.user_id %}
-                <form action="{{ url_for('delete_review', review_id=review.id) }}" method="post" class="delete-form">
-                    <button type="submit" class="btn btn-danger btn-sm float-end">
-                        <i class="fas fa-trash-alt"></i> Apagar Avaliação
-                    </button>
-                </form>
-                {% endif %}
             </div>
         {% else %}
             <div class="alert alert-info">
@@ -99,48 +142,119 @@
             </div>
         {% endfor %}
     </div>
+
+    {# Links de Paginação #}
+    <nav aria-label="Navegação de páginas">
+        <ul class="pagination justify-content-center">
+            {% for page_num in reviews.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                    {% if reviews.page == page_num %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
+                        </li>
+                    {% endif %}
+                {% else %}
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">...</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </nav>
 </div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.review-actions form').forEach(form => {
-        form.addEventListener('submit', function(event) {
-            event.preventDefault(); // Impede o redirecionamento padrão do formulário
+    // Função para tratar ações de like/dislike via AJAX
+    function handleVoteAction(event) {
+        event.preventDefault(); // Impede o redirecionamento padrão do formulário
 
-            console.log('Formulário de ação de revisão submetido, prevenção padrão ativada.'); // Log de depuração
+        const form = event.target;
+        const actionUrl = form.action;
+        const method = form.method;
 
-            const form = event.target;
-            const actionUrl = form.action;
-            
-            fetch(actionUrl, {
-                method: 'POST',
-                // Se você estiver usando CSRF, adicione o cabeçalho aqui:
-                // headers: {
-                //     'X-CSRFToken': '{{ csrf_token() }}'
-                // },
-            })
-            .then(response => response.json())
-            .then(data => {
+        console.log('Formulário de ação (LIKE/DISLIKE) submetido, prevenção padrão ativada. URL:', actionUrl);
+
+        fetch(actionUrl, {
+            method: method,
+            // Se você estiver usando CSRF, adicione o cabeçalho aqui:
+            // headers: {
+            //     'X-CSRFToken': '{{ csrf_token() }}'
+            // },
+        })
+        .then(response => {
+            if (!response.ok) {
+                console.error('Erro HTTP na ação:', response.status, response.statusText);
+                // Tenta ler o corpo da resposta para detalhes do erro, mas falha silenciosamente se não for JSON
+                response.json().then(err => console.error('Detalhes do erro:', err)).catch(() => {});
+                alert('Ocorreu um erro ao processar sua ação.'); // Notificar o usuário
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Resposta da API LIKE/DISLIKE:', data);
+            // Verifica se a resposta tem as propriedades esperadas
+            if (data.hasOwnProperty('likes') && data.hasOwnProperty('dislikes')) {
                 // Atualiza a contagem de likes/dislikes no DOM
-                const reviewCard = form.closest('.review-card');
-                if (reviewCard) {
-                    const likeButton = reviewCard.querySelector('button i.fa-thumbs-up').closest('button');
-                    const dislikeButton = reviewCard.querySelector('button i.fa-thumbs-down').closest('button');
+                // Encontra o card pai (review ou response)
+                const parentCard = form.closest('.review-card') || form.closest('.response-card');
+                if (parentCard) {
+                    const likeButton = parentCard.querySelector('button i.fa-thumbs-up').closest('button');
+                    const dislikeButton = parentCard.querySelector('button i.fa-thumbs-down').closest('button');
 
                     if (likeButton) {
-                        likeButton.innerHTML = '<i class="fas fa-thumbs-up"></i> Útil (' + data.likes + ')';
+                        likeButton.innerHTML = '<i class="fas fa-thumbs-up"></i> ' + (parentCard.classList.contains('review-card') ? 'Útil' : 'Curtir') + ' (' + data.likes + ')';
                     }
                     if (dislikeButton) {
-                         dislikeButton.innerHTML = '<i class="fas fa-thumbs-down"></i> Inútil (' + data.dislikes + ')';
+                        dislikeButton.innerHTML = '<i class="fas fa-thumbs-down"></i> ' + (parentCard.classList.contains('review-card') ? 'Inútil' : 'Não Curtir') + ' (' + data.dislikes + ')';
                     }
                 }
-            })
-            .catch(error => {
-                console.error('Erro ao curtir/descurtir avaliação:', error);
-                // Opcional: mostrar uma mensagem de erro para o usuário
-            });
+            } else {
+                console.error('Resposta da API não contém contagem de likes/dislikes:', data);
+                alert('Resposta inválida do servidor.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na requisição fetch:', error);
+            // alert('Ocorreu um erro ao processar sua ação.'); // Mensagem já mostrada no erro HTTP
+        });
+    }
+
+    // Adiciona listener para botões de like/dislike de avaliações principais
+    document.querySelectorAll('.review-card > .review-actions form.d-inline button[type="submit"]').forEach(button => {
+        button.addEventListener('click', handleVoteAction);
+    });
+
+    // Adiciona listener para botões de like/dislike de respostas de avaliação
+    document.querySelectorAll('.response-card > .response-actions form button[type="submit"]').forEach(button => {
+         // Exclui botões de delete
+        if (!button.closest('form').classList.contains('delete-response-form')) {
+             button.addEventListener('click', handleVoteAction);
+         }
+     });
+
+     // Confirmação para apagar avaliações (Reviews)
+    document.querySelectorAll('.review-card .delete-form button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            if (!confirm('Tem certeza que deseja apagar esta avaliação?')) {
+                event.preventDefault();
+            }
+        });
+    });
+
+    // Confirmação para apagar respostas de avaliação (ReviewResponses)
+    document.querySelectorAll('.response-card .delete-response-form button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            if (!confirm('Tem certeza que deseja apagar esta resposta?')) {
+                event.preventDefault();
+            }
         });
     });
 });

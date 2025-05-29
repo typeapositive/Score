@@ -17,11 +17,11 @@
 }
 
 .community-header .game-image {
-    width: 120px;
-    height: 120px;
-    object-fit: cover;
+    width: 180px;
+    height: auto;
+    object-fit: contain;
     border-radius: 0.5rem;
-    border: 2px solid #66c0f4;
+    border: none;
 }
 
 .community-header .game-details h1 {
@@ -31,8 +31,19 @@
 }
 
 .community-header .game-details p {
-    color: #66c0f4;
+    color: #c7d5e0;
     margin-bottom: 0.5rem;
+}
+
+.community-header .game-details p .community-game-link {
+    color: #66c0f4;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
+}
+
+.community-header .game-details p .community-game-link:hover {
+    color: #1999ff;
+    text-decoration: underline;
 }
 
 .community-header .community-description {
@@ -59,6 +70,7 @@
     margin-bottom: 1.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s;
+    position: relative; /* Adicionado para posicionar elementos internos absolutamente */
 }
 
 .post-card:hover {
@@ -267,11 +279,18 @@
     background-color: #66c0f4;
     border-color: #66c0f4;
     color: #1b2838;
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: background-color .15s ease-in-out, border-color .15s ease-in-out;
 }
 
 .post-form .btn-primary:hover {
     background-color: #1999ff;
     border-color: #1999ff;
+}
+
+.post-form .btn-primary i {
+    margin-right: 5px;
 }
 
 /* Estilos para o fórum */
@@ -281,6 +300,11 @@
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative; /* Necessário para o posicionamento absoluto do botão de apagar */
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
 }
 
 .review-header {
@@ -297,9 +321,9 @@
 }
 
 .review-game-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
     border-radius: 0.5rem;
 }
 
@@ -407,9 +431,9 @@
 }
 
 .community-image {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
     border-radius: 0.5rem;
 }
 
@@ -422,4 +446,223 @@
     color: #c7d5e0;
     margin: 0.5rem 0 0;
     font-size: 0.9rem;
+}
+
+.delete-form {
+    position: absolute;
+    top: 15px; /* Ajuste conforme necessário para alinhamento vertical */
+    right: 15px; /* Ajuste conforme necessário para alinhamento horizontal */
+    z-index: 1; /* Garante que o botão fique acima de outros elementos */
+}
+
+.review-author a, .response-author-name a, .post-author-name a, .community-info h4 a {
+    color: #c7d5e0; /* Cor padrão para links de usuário */
+    text-decoration: none;
+}
+
+.review-author a:hover, .response-author-name a:hover, .post-author-name a:hover, .community-info h4 a:hover {
+    color: #66c0f4; /* Cor ao passar o mouse */
+    text-decoration: underline;
+}
+
+.review-game-name a {
+    color: #66c0f4; /* Cor padrão para o nome do jogo no fórum */
+    text-decoration: none;
+}
+
+.review-game-name a:hover {
+    color: #1999ff; /* Cor ao passar o mouse */
+    text-decoration: underline;
+}
+
+.community-page .btn-outline-secondary {
+    color: #bbb;
+    border-color: #555;
+}
+
+.community-page .btn-outline-secondary:hover {
+    color: #fff;
+    border-color: #bbb;
+}
+
+.community-page .btn-primary {
+    color: #fff;
+    background-color: #5a8ee6;
+    border-color: #5a8ee6;
+}
+
+.community-page .btn-primary:hover {
+    background-color: #467fcf;
+    border-color: #467fcf;
+}
+
+/* Estilos para os botões de ordenação no fórum */
+.container h1.mb-4 + .d-flex .btn.btn-sm {
+    /* Estilos gerais para os botões de ordenação no fórum */
+    margin-left: 5px;
+}
+
+.container h1.mb-4 + .d-flex .btn.btn-sm.btn-primary {
+    /* Estilo para o botão de ordenação ativo no fórum */
+    background-color: #5a8ee6;
+    border-color: #5a8ee6;
+    color: #fff;
+}
+
+.container h1.mb-4 + .d-flex .btn.btn-sm.btn-outline-secondary {
+    /* Estilo para o botão de ordenação inativo no fórum */
+    background-color: transparent;
+    border-color: #5a8ee6;
+    color: #5a8ee6;
+}
+
+.container h1.mb-4 + .d-flex .btn.btn-sm.btn-outline-secondary:hover {
+    /* Estilo de hover para o botão de ordenação inativo no fórum */
+    background-color: rgba(90, 142, 230, 0.1);
+    color: #fff;
+    border-color: #fff;
+}
+
+.media-upload-container {
+    /* Estilo base para a área de upload, similar a um botão */
+    border: 1px solid #66c0f4; /* Borda azul Steam */
+    background-color: rgba(102, 192, 244, 0.1); /* Fundo azul claro semi-transparente */
+    color: #66c0f4; /* Cor do texto azul Steam */
+    padding: .375rem .75rem; /* Padding Bootstrap */
+    border-radius: .25rem; /* Borda arredondada Bootstrap */
+    cursor: pointer;
+    text-align: center;
+    margin-bottom: 1rem;
+    display: block; /* Ocupa a largura total disponível na coluna */
+    transition: background-color .15s ease-in-out, border-color .15s ease-in-out, color .15s ease-in-out;
+    font-weight: 600; /* Texto um pouco mais forte */
+    text-transform: uppercase; /* Texto em caixa alta */
+}
+
+.media-upload-container:hover {
+    background-color: rgba(102, 192, 244, 0.2); /* Fundo um pouco mais opaco no hover */
+    border-color: #1999ff; /* Borda azul mais vibrante */
+    color: #1999ff; /* Cor do texto azul mais vibrante */
+}
+
+.media-upload-container p {
+    margin: 0; /* Remove margem padrão do parágrafo */
+}
+
+.media-upload-container p::before {
+    content: '\f03e'; /* Código Unicode para ícone de imagem (FontAwesome) */
+    font-family: 'Font Awesome 6 Free'; /* Usa a fonte FontAwesome */
+    font-weight: 900; /* Peso para ícones sólidos */
+    margin-right: 8px; /* Espaço entre ícone e texto */
+}
+
+.media-upload-preview {
+    margin-top: 15px;
+}
+
+.preview-container {
+    position: relative;
+    display: inline-block; /* Ajusta o display para o botão de remover */
+    max-width: 100%; /* Garante que não transborde */
+}
+
+.preview-container img,
+.preview-container video {
+    display: block;
+    max-width: 100%;
+    height: auto; /* Mantém a proporção */
+    border-radius: .25rem; /* Borda arredondada para a mídia */
+}
+
+.remove-media {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 10; /* Garante que fique por cima da mídia */
+    /* Estilos para o botão x */
+    background-color: rgba(220, 53, 69, 0.8); /* Fundo vermelho semi-transparente */
+    border: none;
+    border-radius: 50%; /* Formato redondo */
+    width: 25px;
+    height: 25px;
+    padding: 0;
+    text-align: center;
+    line-height: 1; /* Centraliza o x */
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.remove-media:hover {
+     background-color: rgba(220, 53, 69, 1); /* Fundo vermelho opaco no hover */
+}
+
+/* Estilo para a mídia dentro do post */
+.post-media-container {
+    margin-top: 15px; /* Espaço acima da mídia */
+    margin-bottom: 15px; /* Espaço abaixo da mídia */
+    /* Removido text-align: center; */ /* Para alinhar à esquerda */
+}
+
+.post-media-container img,
+.post-media-container video {
+    max-width: 100%;
+    height: auto;
+    display: block; /* Garante que o elemento ocupe sua própria linha */
+    /* Removido margin: 0 auto; */ /* Para alinhar à esquerda */
+    border-radius: .25rem; /* Borda arredondada */
+}
+
+/* Estilos para a modal de visualização de mídia */
+#mediaModal .modal-content {
+    background-color: #1b2838; /* Fundo escuro */
+    color: #c7d5e0; /* Texto claro */
+}
+
+#mediaModal .modal-header {
+    border-bottom-color: #2a475e; /* Borda mais escura */
+}
+
+#mediaModal .modal-footer {
+     border-top-color: #2a475e; /* Borda mais escura */
+}
+
+#mediaModal .modal-body {
+    text-align: center; /* Centraliza a mídia na modal */
+}
+
+#mediaModal .modal-body img,
+#mediaModal .modal-body video {
+    max-width: 100%;
+    max-height: 80vh; /* Limita a altura máxima para caber na tela */
+    height: auto;
+    display: block; /* Garante que ocupe sua linha */
+    margin: 0 auto; /* Centraliza o bloco de mídia */
+}
+
+/* Estilo para o botão do dropdown de opções da comunidade */
+.community-list .card .dropdown-toggle.btn-secondary {
+    background-color: transparent; /* Fundo transparente */
+    border: none; /* Sem borda */
+    color: #c7d5e0; /* Cor do ícone (similar ao texto claro Steam) */
+    padding: 0.25rem 0.5rem; /* Ajusta o padding para ser menor */
+    font-size: 1rem; /* Tamanho do ícone */
+    line-height: 1; /* Ajusta o alinhamento do ícone */
+    /* Garante que o botão tenha um tamanho mínimo */
+    min-width: 30px;
+    min-height: 30px;
+    display: flex; /* Usa flexbox para centralizar o ícone */
+    align-items: center;
+    justify-content: center;
+}
+
+.community-list .card .dropdown-toggle.btn-secondary:hover {
+    color: #66c0f4; /* Cor azul Steam no hover */
+    background-color: rgba(102, 192, 244, 0.1); /* Fundo azul claro semi-transparente no hover */
+    border-color: transparent; /* Sem borda no hover */
+}
+
+.community-list .card .dropdown-toggle.btn-secondary::after {
+    /* Oculta a seta padrão do dropdown do Bootstrap */
+    display: none;
 } 

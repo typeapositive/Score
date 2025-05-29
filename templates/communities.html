@@ -56,29 +56,20 @@
         </div>
     </div>
 
-    <!-- Opções de ordenação (visível apenas quando um jogo é selecionado) -->
-    {% if selected_game_id %}
-    <div class="row mb-3">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-body d-flex justify-content-between align-items-center">
-                    <span>Comunidades para: <strong>{% if game_name %}{{ game_name }}{% else %}Jogo Selecionado{% endif %}</strong></span>
-                    <div>
-                        Ordenar por:
-                        <a href="{{ url_for('communities', game_id=selected_game_id, sort='popular') }}" 
-                           class="btn btn-sm {% if request.args.get('sort', 'popular') == 'popular' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                            Mais Populares
-                        </a>
-                        <a href="{{ url_for('communities', game_id=selected_game_id, sort='recent') }}"
-                           class="btn btn-sm {% if request.args.get('sort') == 'recent' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-                            Mais Recentes
-                        </a>
-                    </div>
-                </div>
-            </div>
+    <!-- Opções de ordenação (Visível sempre) -->
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <span class="me-2">Ordenar por:</span>
+        <div class="btn-group" role="group" aria-label="Opções de Ordenação Comunidades">
+            <a href="{{ url_for('communities', search=search, game_id=selected_game_id, sort='recent') }}" 
+               class="btn btn-sm {% if sort_by == 'recent' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Mais Recentes
+            </a>
+            <a href="{{ url_for('communities', search=search, game_id=selected_game_id, sort='popular') }}"
+               class="btn btn-sm {% if sort_by == 'popular' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                Mais Populares
+            </a>
         </div>
     </div>
-    {% endif %}
 
     <!-- Lista de Comunidades -->
     <div class="row">
@@ -88,7 +79,31 @@
                 <div class="card h-100">
                     <img src="{{ community.game_img }}" class="card-img-top" alt="{{ community.game_name }}">
                     <div class="card-body">
-                        <h5 class="card-title">{{ community.game_name }}</h5>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="card-title">{{ community.name }}</h5>
+                            
+                             {# Menu de opções da comunidade #}
+                            {% if current_user.is_authenticated %}
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="communityOptionsDropdown-{{ community.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="fas fa-ellipsis-v"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="communityOptionsDropdown-{{ community.id }}">
+                                        {% if current_user.id == community.creator_id %}
+                                            {# Opções para o criador #}
+                                            <li><a class="dropdown-item" href="#">Editar Descrição/Nome</a></li>
+                                            <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmDeleteCommunityModal" data-community-id="{{ community.id }}">Apagar Comunidade</a></li>
+                                        {% elif community.is_member %}
+                                            {# Opções para membros (não criador) #}
+                                            <li><a class="dropdown-item text-warning" href="#" data-bs-toggle="modal" data-bs-target="#confirmLeaveCommunityModal" data-community-id="{{ community.id }}">Sair da Comunidade</a></li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+
+                        </div>
+                        
+                        <p class="card-text text-muted" style="font-size: 0.9rem; margin-top: -10px;">{{ community.game_name }}</p>
                         <p class="card-text mb-1 text-muted small">
                             <small class="text-muted">
                                 <i class="fas fa-users"></i> {{ community.member_count }} membros
@@ -120,9 +135,57 @@
         </div>
     </div>
 </div>
+
+{# Modais de Confirmação #}
+
+{# Modal de Confirmação Apagar Comunidade #}
+<div class="modal fade" id="confirmDeleteCommunityModal" tabindex="-1" aria-labelledby="confirmDeleteCommunityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmDeleteCommunityModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja apagar esta comunidade? Esta ação é irreversível e apagará todos os posts, membros e convites associados.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                 {# O formulário de exclusão real será preenchido via JS #}
+                <form id="deleteCommunityForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Apagar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Modal de Confirmação Sair da Comunidade #}
+<div class="modal fade" id="confirmLeaveCommunityModal" tabindex="-1" aria-labelledby="confirmLeaveCommunityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-white">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmLeaveCommunityModalLabel">Confirmar Saída</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Tem certeza que deseja sair desta comunidade?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                {# O formulário de saída real será preenchido via JS #}
+                <form id="leaveCommunityForm" method="POST" class="d-inline">
+                     <button type="submit" class="btn btn-warning">Sair</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
+{{ super() }}
 <script>
     let searchTimeout;
     const gameSearchInput = document.getElementById('gameSearchInput');
@@ -219,6 +282,29 @@
     // Se houver um search de texto (fallback), preenchemos o input com ele
     gameSearchInput.value = "{{ search }}";
     {% endif %}
+
+    // Lógica para modais de confirmação de apagar/sair comunidade
+    const confirmDeleteCommunityModal = document.getElementById('confirmDeleteCommunityModal');
+    const deleteCommunityForm = document.getElementById('deleteCommunityForm');
+    const confirmLeaveCommunityModal = document.getElementById('confirmLeaveCommunityModal');
+    const leaveCommunityForm = document.getElementById('leaveCommunityForm');
+
+    if (confirmDeleteCommunityModal) {
+        confirmDeleteCommunityModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botão que acionou a modal
+            const communityId = button.dataset.communityId; // Extrai o ID da comunidade do atributo data-community-id
+            // Define a action do formulário de apagar dinamicamente
+            deleteCommunityForm.action = `{{ url_for('delete_community', community_id=0) }}`.replace('/0', `/${communityId}`);
+        });
+    }
+     if (confirmLeaveCommunityModal) {
+        confirmLeaveCommunityModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botão que acionou a modal
+            const communityId = button.dataset.communityId; // Extrai o ID da comunidade
+            // Define a action do formulário de sair dinamicamente
+            leaveCommunityForm.action = `{{ url_for('leave_community', community_id=0) }}`.replace('/0', `/${communityId}`);
+        });
+    }
 
 </script>
 {% endblock %} 
