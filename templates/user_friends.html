@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Amigos de {{ user.username }} - SCORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('profile', username=user.username) }}" class="btn btn-outline-secondary me-3">
+            <i class="fas fa-arrow-left"></i> Voltar ao Perfil
+        </a>
+        <h1>Amigos de {{ user.username }}</h1>
+    </div>
+
+    <div class="row">
+        {% if friends %}
+            {% for friend in friends %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <img src="{{ url_for('static', filename=friend.avatar_url) }}" alt="{{ friend.username }}" class="rounded-circle me-3" style="width: 64px; height: 64px; object-fit: cover;">
+                                <div>
+                                    <h5 class="card-title mb-1">
+                                        <a href="{{ url_for('profile', username=friend.username) }}" class="text-decoration-none">
+                                            {{ friend.username }}
+                                        </a>
+                                    </h5>
+                                    <p class="card-text text-muted small">
+                                        {{ friend.bio or 'Sem biografia' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> {{ user.username }} ainda não tem amigos.
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

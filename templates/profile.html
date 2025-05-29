@@ -21,7 +21,7 @@
                 </button>
                 {% elif current_user.is_authenticated and current_user.id != user.id %}
                 <button class="invite-community-btn" data-bs-toggle="modal" data-bs-target="#inviteCommunityModal" data-bs-username="{{ user.username }}" title="Convidar para Comunidade">
-                    <i class="fas fa-user-plus"></i>
+                    <i class="fas fa-users"></i> <span>Convidar</span>
                 </button>
                 {% endif %}
                 
@@ -29,10 +29,10 @@
                 {% if current_user.is_authenticated and current_user.id != user.id %}
                     {% if friendship_status == 'not_friends' %}
                         <form action="{{ url_for('send_friend_request', username=user.username) }}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-primary btn-sm mt-2">Adicionar Amigo <i class="fas fa-user-plus"></i></button>
+                            <button type="submit" class="btn btn-primary btn-sm">Adicionar Amigo <i class="fas fa-user-plus"></i></button>
                         </form>
                     {% elif friendship_status == 'pending_sent' %}
-                        <button class="btn btn-secondary btn-sm mt-2" disabled>Solicitação Enviada <i class="fas fa-hourglass-half"></i></button>
+                        <button class="btn btn-secondary btn-sm" disabled>Solicitação Enviada <i class="fas fa-hourglass-half"></i></button>
                     {# Não adicionaremos o botão para 'pending_received' ou 'friends' aqui, pois isso é tratado nas notificações #}
                     {% endif %}
                 {% endif %}
@@ -49,8 +49,10 @@
                     <div class="stat-label">Comunidades</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value">{{ friends|length }}</div>
-                    <div class="stat-label">Amigos</div>
+                    <a href="{{ url_for('user_friends', username=user.username) }}" class="text-decoration-none">
+                        <div class="stat-value">{{ friends|length }}</div>
+                        <div class="stat-label">Amigos</div>
+                    </a>
                 </div>
             </div>
         </div>

@@ -1043,8 +1043,8 @@ def profile(username):
     
     # Busca amigos
     friendships_query = Friendship.query.filter(
-        ((Friendship.user_id == user.id) & (Friendship.friend_id == user.id)) |  # Amizade aceita
-        ((Friendship.user_id == user.id) | (Friendship.friend_id == user.id)) # Amizade aceita
+        ((Friendship.user_id == user.id) | (Friendship.friend_id == user.id)) &
+        (Friendship.status == 'accepted')
     )
     
     # Busca a relação de amizade entre o usuário logado e o usuário do perfil
@@ -1158,6 +1158,26 @@ def invite_to_community_from_profile(username):
     db.session.commit()
     flash('Convite enviado com sucesso!', 'success')
     return redirect(url_for('profile', username=username))
+
+@app.route('/profile/<username>/friends')
+def user_friends(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    
+    # Busca amigos
+    friendships_query = Friendship.query.filter(
+        ((Friendship.user_id == user.id) | (Friendship.friend_id == user.id)) &
+        (Friendship.status == 'accepted')
+    )
+    
+    friends = []
+    for friendship in friendships_query.all():
+        if friendship.user_id == user.id:
+            friend = User.query.get(friendship.friend_id)
+        else:
+            friend = User.query.get(friendship.user_id)
+        friends.append(friend)
+    
+    return render_template('user_friends.html', user=user, friends=friends)
 
 if __name__ == '__main__':
     with app.app_context():
