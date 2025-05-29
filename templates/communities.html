@@ -346,10 +346,10 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal de Edição de Comunidade
+    // Manipulador para o modal de edição
     const editCommunityModal = document.getElementById('editCommunityModal');
     if (editCommunityModal) {
-        editCommunityModal.addEventListener('show.bs.modal', function (event) {
+        editCommunityModal.addEventListener('show.bs.modal', function(event) {
             const button = event.relatedTarget;
             const communityId = button.getAttribute('data-community-id');
             const communityName = button.getAttribute('data-community-name');
@@ -359,18 +359,6 @@ document.addEventListener('DOMContentLoaded', function() {
             modal.querySelector('#edit_community_id').value = communityId;
             modal.querySelector('#edit_community_name').value = communityName;
             modal.querySelector('#edit_community_description').value = communityDescription;
-        });
-    }
-
-    // Confirmação para apagar comunidade
-    const deleteCommunityModal = document.getElementById('confirmDeleteCommunityModal');
-    if (deleteCommunityModal) {
-        deleteCommunityModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const communityId = button.getAttribute('data-community-id');
-            const form = this.querySelector('form');
-            form.action = "{{ url_for('delete_community') }}";
-            form.querySelector('input[name="community_id"]').value = communityId;
         });
     }
 });

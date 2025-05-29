@@ -161,4 +161,39 @@
 .game-search-item .game-price {
     font-size: 0.8rem;
     color: #c7d5e0;
+}
+
+/* Estilos para o modal de edição de comunidade */
+#editCommunityModal .modal-content {
+    background-color: #1c2a3a;
+    border: 1px solid #2e4052;
+}
+
+#editCommunityModal .modal-header {
+    border-bottom: 1px solid #2e4052;
+}
+
+#editCommunityModal .modal-footer {
+    border-top: 1px solid #2e4052;
+}
+
+#editCommunityModal .form-control {
+    background-color: #2a3a4a;
+    border: 1px solid #2e4052;
+    color: #fff;
+}
+
+#editCommunityModal .form-control:focus {
+    background-color: #2a3a4a;
+    border-color: #5a8ee6;
+    color: #fff;
+    box-shadow: 0 0 0 0.25rem rgba(90, 142, 230, 0.25);
+}
+
+#editCommunityModal .form-label {
+    color: #fff;
+}
+
+#editCommunityModal .btn-close {
+    filter: invert(1);
 } 

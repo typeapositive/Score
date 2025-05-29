@@ -330,4 +330,43 @@
     align-items: center;
     font-size: 1.5rem;
     border: 2px dashed #444; /* Borda tracejada */
+}
+
+/* Estilos para o título Avaliações */
+.col-md-8 h4 {
+    color: #ffffff; /* Cor branca */
+    font-family: 'Motiva Sans', Arial, sans-serif;
+    text-align: left;
+    margin-top: 40px; /* Mais espaço acima */
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #66c0f4;
+    font-size: 1.2em;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Estilos para o título principal do Fórum */
+.container h1 {
+    color: #c7d5e0; /* Cor clara característica do Steam */
+    font-family: 'Motiva Sans', Arial, sans-serif;
+    font-size: 2.2em;
+    font-weight: 300;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #66c0f4;
+    position: relative;
+}
+
+.container h1::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, #66c0f4 0%, transparent 100%);
 } 
