@@ -23,12 +23,18 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chave-secreta-do-avaliador-de-jogos'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+
+# Configuração do diretório de uploads usando caminho absoluto
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Garante que o diretório de uploads existe
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
-    os.makedirs(app.config['UPLOAD_FOLDER'])
-    print(f"Diretório de uploads criado em: {app.config['UPLOAD_FOLDER']}")
+    try:
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        print(f"Diretório de uploads criado em: {app.config['UPLOAD_FOLDER']}")
+    except Exception as e:
+        print(f"Erro ao criar diretório de uploads: {str(e)}")
 
 # Inicialização do SQLAlchemy
 db = SQLAlchemy(app)
@@ -533,6 +539,7 @@ def create_post(community_id):
     media_type = None
 
     if media and media.filename:
+        print(f"Tentando fazer upload do arquivo: {media.filename}")
         # Verifica a extensão do arquivo
         filename = secure_filename(media.filename)
         file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
@@ -551,13 +558,18 @@ def create_post(community_id):
         # Salva o arquivo
         try:
             media_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            print(f"Tentando salvar arquivo em: {media_path}")
+            print(f"Diretório de upload existe? {os.path.exists(app.config['UPLOAD_FOLDER'])}")
+            print(f"Permissões do diretório: {oct(os.stat(app.config['UPLOAD_FOLDER']).st_mode)[-3:]}")
+            
             media.save(media_path)
             media_url = f'uploads/{unique_filename}'
-            print(f"Arquivo salvo em: {media_path}")
+            print(f"Arquivo salvo com sucesso em: {media_path}")
             print(f"URL da mídia: {media_url}")
         except Exception as e:
             print(f"Erro ao salvar arquivo: {str(e)}")
-            flash('Erro ao salvar o arquivo de mídia.', 'danger')
+            print(f"Tipo do erro: {type(e)}")
+            flash('Erro ao salvar o arquivo de mídia. Por favor, tente novamente.', 'danger')
             return redirect(url_for('community_details', community_id=community_id))
 
     elif not content:
@@ -565,17 +577,24 @@ def create_post(community_id):
         return redirect(url_for('community_details', community_id=community_id))
 
     # Cria o post
-    post = Post(
-        content=content,
-        media_url=media_url,
-        media_type=media_type,
-        user_id=current_user.id,
-        community_id=community_id
-    )
-    
-    db.session.add(post)
-    db.session.commit()
-    flash('Postagem criada com sucesso!', 'success')
+    try:
+        post = Post(
+            content=content,
+            media_url=media_url,
+            media_type=media_type,
+            user_id=current_user.id,
+            community_id=community_id
+        )
+        
+        db.session.add(post)
+        db.session.commit()
+        flash('Postagem criada com sucesso!', 'success')
+    except Exception as e:
+        print(f"Erro ao criar post: {str(e)}")
+        db.session.rollback()
+        flash('Erro ao criar a postagem. Por favor, tente novamente.', 'danger')
+        return redirect(url_for('community_details', community_id=community_id))
+
     return redirect(url_for('community_details', community_id=community_id))
 
 @app.route('/post/<int:post_id>/comment', methods=['POST'])
