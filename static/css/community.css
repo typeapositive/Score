@@ -142,9 +142,18 @@
 
 /* Estilos para comentários */
 .comments-section {
-    margin-top: 1rem;
+    margin-top: 2rem; /* Aumenta o espaço acima da seção de comentários */
     padding-top: 1rem;
     border-top: 1px solid #1b2838;
+}
+
+.comment {
+    background-color: #1e3142; /* Um fundo um pouco mais claro que o do post */
+    border: 1px solid #2a475e; /* Uma borda sutil */
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem; /* Espaço entre comentários */
+    margin-top: 1rem; /* Adiciona espaço acima de cada comentário */
 }
 
 .comment-card {
@@ -169,9 +178,19 @@
 }
 
 .comment-author-name {
-    color: #66c0f4;
     font-size: 0.9rem;
     margin: 0;
+}
+
+.comment .author-name {
+    color: #ffffff; /* Cor branca para o nome do usuário dentro de um comentário */
+    text-decoration: none; /* Remover sublinhado */
+    transition: color 0.2s ease-in-out; /* Adicionar transição suave */
+}
+
+.comment .author-name:hover {
+    color: #66c0f4; /* Mudar cor no hover (opcional, para feedback visual) */
+    text-decoration: underline; /* Adicionar sublinhado no hover (opcional) */
 }
 
 .comment-date {
@@ -282,6 +301,7 @@
     font-weight: 600;
     text-transform: uppercase;
     transition: background-color .15s ease-in-out, border-color .15s ease-in-out;
+    margin-top: 0.5rem; /* Adiciona uma margem superior */
 }
 
 .post-form .btn-primary:hover {
@@ -665,4 +685,29 @@
 .community-list .card .dropdown-toggle.btn-secondary::after {
     /* Oculta a seta padrão do dropdown do Bootstrap */
     display: none;
+}
+
+/* Estilos para o botão de deletar comentário */
+.delete-comment-btn {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+    transition: all 0.2s ease-in-out;
+}
+
+.delete-comment-btn:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+    transform: scale(1.05);
+}
+
+.delete-comment-btn i {
+    margin-right: 5px;
+}
+
+/* Estilos para botões de sucesso (como o de criar comunidade) */
+.btn-success {
+    /* Se já houver estilos para .btn-success, ajuste conforme necessário */
+    position: relative; /* Garante que z-index funcione */
+    z-index: 10; /* Um valor alto para garantir que esteja acima de outros elementos */
 } 

@@ -1253,6 +1253,22 @@ def edit_community():
     
     return redirect(url_for('community_details', community_id=community_id))
 
+@app.route('/comment/<int:comment_id>/delete', methods=['POST'])
+@login_required
+def delete_comment(comment_id):
+    comment = Comment.query.get_or_404(comment_id)
+    post = Post.query.get_or_404(comment.post_id)
+    
+    # Verifica se o usuário é o autor do comentário
+    if comment.user_id != current_user.id:
+        flash('Você não tem permissão para apagar este comentário.', 'danger')
+        return redirect(url_for('community_details', community_id=post.community_id))
+    
+    db.session.delete(comment)
+    db.session.commit()
+    flash('Comentário apagado com sucesso!', 'success')
+    return redirect(url_for('community_details', community_id=post.community_id))
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
