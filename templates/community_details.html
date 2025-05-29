@@ -266,6 +266,63 @@
                 }
             });
         });
+
+        // AJAX para envio de comentários
+        document.querySelectorAll('.comment-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const textarea = form.querySelector('textarea[name="comment"]');
+                const comment = textarea.value.trim();
+                if (!comment) return;
+                const url = form.action;
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ comment })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Limpa o campo
+                        textarea.value = '';
+                        // Opcional: recarrega a página ou atualiza a lista de comentários via AJAX
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Erro ao comentar.');
+                    }
+                })
+                .catch(() => alert('Erro ao comentar.'));
+            });
+        });
+
+        // AJAX para exclusão de comentários
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function(event) {
+                if (!form.classList.contains('d-inline')) return; // Só para comentários
+                event.preventDefault();
+                if (!confirm('Tem certeza que deseja apagar este comentário?')) return;
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Opcional: recarrega a página ou remove o comentário do DOM
+                        location.reload();
+                    } else {
+                        alert(data.message || 'Erro ao apagar comentário.');
+                    }
+                })
+                .catch(() => alert('Erro ao apagar comentário.'));
+            });
+        });
     });
 
     function updateMediaFileName(input) {

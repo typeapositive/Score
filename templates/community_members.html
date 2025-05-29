@@ -27,8 +27,8 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% if current_user.is_authenticated and current_user.id != member.id %}
-                                    <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    {% if current_user.is_authenticated and current_user.id != member.id %}
                                         {% if member.is_friend %}
                                             <span class="badge bg-success"><i class="fas fa-check"></i> Amigo</span>
                                         {% elif member.friendship_pending %}
@@ -40,8 +40,15 @@
                                                 </button>
                                             </form>
                                         {% endif %}
-                                    </div>
-                                {% endif %}
+                                    {% endif %}
+                                    {% if current_user.is_authenticated and current_user.id == community.creator_id and member.id != community.creator_id %}
+                                        <form action="{{ url_for('kick_member', community_id=community.id, user_id=member.id) }}" method="post" class="d-inline ms-2">
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja expulsar este membro?')">
+                                                <i class="fas fa-user-times"></i> Expulsar
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
                             </div>
                         {% else %}
                             <div class="list-group-item text-muted">Nenhum membro encontrado.</div>

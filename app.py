@@ -582,21 +582,22 @@ def create_post(community_id):
 @login_required
 def add_comment(post_id):
     post = Post.query.get_or_404(post_id)
-    
     # Verifica se o usuário é membro da comunidade
     if not CommunityMember.query.filter_by(user_id=current_user.id, community_id=post.community_id).first():
+        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Você precisa ser membro da comunidade para comentar.'}), 403
         flash('Você precisa ser membro da comunidade para comentar.', 'danger')
         return redirect(url_for('community_details', community_id=post.community_id))
-    
-    content = request.form.get('comment')
+    content = request.form.get('comment') or (request.json and request.json.get('comment'))
     comment = Comment(
         content=content,
         user_id=current_user.id,
         post_id=post_id
     )
-    
     db.session.add(comment)
     db.session.commit()
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'Comentário adicionado com sucesso!'}), 200
     flash('Comentário adicionado com sucesso!', 'success')
     return redirect(url_for('community_details', community_id=post.community_id))
 
@@ -910,7 +911,7 @@ def respond_to_review(review_id):
     
     db.session.commit()
     flash('Resposta publicada com sucesso!', 'success')
-    return redirect(url_for('game_details', appid=review.game_id))
+    return redirect(url_for('forum'))
 
 @app.route('/review/<int:review_id>/like', methods=['POST'])
 @login_required
@@ -1363,16 +1364,42 @@ def edit_community():
 def delete_comment(comment_id):
     comment = Comment.query.get_or_404(comment_id)
     post = Post.query.get_or_404(comment.post_id)
-    
-    # Verifica se o usuário é o autor do comentário
     if comment.user_id != current_user.id:
+        if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'message': 'Você não tem permissão para apagar este comentário.'}), 403
         flash('Você não tem permissão para apagar este comentário.', 'danger')
-        return redirect(url_for('community_details', community_id=post.community_id))
-    
+        if post.community_id:
+            return redirect(url_for('community_details', community_id=post.community_id))
+        else:
+            return redirect(url_for('forum'))
     db.session.delete(comment)
     db.session.commit()
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True, 'message': 'Comentário apagado com sucesso!'}), 200
     flash('Comentário apagado com sucesso!', 'success')
-    return redirect(url_for('community_details', community_id=post.community_id))
+    if post.community_id:
+        return redirect(url_for('community_details', community_id=post.community_id))
+    else:
+        return redirect(url_for('forum'))
+
+@app.route('/community/<int:community_id>/kick/<int:user_id>', methods=['POST'])
+@login_required
+def kick_member(community_id, user_id):
+    community = Community.query.get_or_404(community_id)
+    if current_user.id != community.creator_id:
+        flash('Apenas o líder pode expulsar membros.', 'danger')
+        return redirect(url_for('community_members', community_id=community_id))
+    if user_id == community.creator_id:
+        flash('O líder não pode se expulsar.', 'warning')
+        return redirect(url_for('community_members', community_id=community_id))
+    member = CommunityMember.query.filter_by(user_id=user_id, community_id=community_id).first()
+    if not member:
+        flash('Membro não encontrado.', 'danger')
+        return redirect(url_for('community_members', community_id=community_id))
+    db.session.delete(member)
+    db.session.commit()
+    flash('Membro expulso com sucesso!', 'success')
+    return redirect(url_for('community_members', community_id=community_id))
 
 if __name__ == '__main__':
     with app.app_context():

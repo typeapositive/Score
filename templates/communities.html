@@ -301,22 +301,7 @@
         }
         // Se um jogo foi selecionado via sugestão, o game_id já está preenchido e search é limpo
     });
-
-    // Preencher o campo de busca de jogo se um game_id já estiver selecionado na URL
-    {% if selected_game_id %}
-    // Precisamos do nome do jogo para preencher o campo de busca
-    // Se selected_game_id está presente, o nome do jogo já deve ter sido passado para o template na rota
-    // Podemos usar uma variável Jinja passada na rota ou fazer uma nova chamada API se necessário
-    // Por enquanto, vamos assumir que game_name está disponível no contexto Jinja quando selected_game_id está presente
-    const initialGameName = "{{ game_name if game_name else '' }}";
-    if (initialGameName) {
-        gameSearchInput.value = initialGameName;
-    }
-    {% elif search %}
-    // Se houver um search de texto (fallback), preenchemos o input com ele
-    gameSearchInput.value = "{{ search }}";
-    {% endif %}
-
+    
     // Lógica para modais de confirmação de apagar/sair comunidade
     const confirmDeleteCommunityModal = document.getElementById('confirmDeleteCommunityModal');
     const deleteCommunityForm = document.getElementById('deleteCommunityForm');
