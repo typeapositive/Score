@@ -16,6 +16,7 @@ import sqlite3
 import api_steam as steam_api
 from werkzeug.utils import secure_filename
 from pytz import UTC
+from urllib.parse import urlparse
 
 # Configuração do aplicativo
 app = Flask(__name__)
@@ -288,12 +289,20 @@ def forum():
 
     reviews = query.paginate(page=page, per_page=10)
     
-    # Adiciona as imagens dos jogos às avaliações
+    # Adiciona as imagens dos jogos e o status do voto do usuário às avaliações
     for review in reviews.items:
         game = steam_api.get_game_details(review.game_id)
         if game:
             review.game_img = game.get('img_url', '')
-            
+        
+        # Busca o voto do usuário logado para esta review
+        user_vote = None
+        if current_user.is_authenticated:
+            vote = ReviewVote.query.filter_by(user_id=current_user.id, review_id=review.id).first()
+            if vote:
+                user_vote = vote.type # 'like' ou 'dislike'
+        review.user_vote = user_vote # Adiciona o status do voto ao objeto review
+
     # --- Busca de dados para o Hall da Fama ---
     # Usuário com mais avaliações
     user_most_reviews_data = db.session.query(User, db.func.count(Review.id).label('review_count'))\
@@ -395,10 +404,39 @@ def communities():
                            selected_game_id=game_id,
                            sort_by=sort_by) # Passa sort_by para o template
 
+@app.route('/community/<int:community_id>/members')
+def community_members(community_id):
+    community = Community.query.get_or_404(community_id)
+    members = db.session.query(User).join(CommunityMember).filter(CommunityMember.community_id == community_id).all()
+    
+    # Para cada membro, verificar se já são amigos do usuário logado
+    if current_user.is_authenticated:
+        for member in members:
+            if member.id != current_user.id:
+                friendship = Friendship.query.filter(
+                    ((Friendship.user_id == current_user.id) & (Friendship.friend_id == member.id)) |
+                    ((Friendship.user_id == member.id) & (Friendship.friend_id == current_user.id))
+                ).first()
+                member.is_friend = friendship and friendship.status == 'accepted'
+                member.friendship_pending = friendship and friendship.status == 'pending'
+            else:
+                member.is_friend = False
+                member.friendship_pending = False
+    else:
+         for member in members:
+             member.is_friend = False
+             member.friendship_pending = False
+
+
+    return render_template('community_members.html', community=community, members=members)
+
 @app.route('/community/<int:community_id>')
 def community_details(community_id):
     community = Community.query.get_or_404(community_id)
     
+    # Conta o número de membros da comunidade
+    member_count = db.session.query(CommunityMember).filter_by(community_id=community_id).count()
+
     page = request.args.get('page', 1, type=int)
     sort_by = request.args.get('sort', 'recent') # Padrão: mais recentes
     
@@ -421,7 +459,8 @@ def community_details(community_id):
     return render_template('community_details.html', 
                            community=community, 
                            posts=posts, 
-                           is_member=is_member, 
+                           is_member=is_member,
+                           member_count=member_count, # Passa a contagem de membros para o template
                            sort_by=sort_by)
 
 @app.route('/community/<int:community_id>/join', methods=['POST'])
@@ -877,17 +916,69 @@ def respond_to_review(review_id):
 @login_required
 def like_review(review_id):
     review = Review.query.get_or_404(review_id)
-    review.likes += 1
+    user_id = current_user.id
+
+    # Evita que o autor vote na própria review
+    if review.user_id == user_id:
+        return jsonify({'likes': review.likes, 'dislikes': review.dislikes, 'user_vote': None}), 400 # Retorna 400 Bad Request ou outro código apropriado
+
+    existing_vote = ReviewVote.query.filter_by(user_id=user_id, review_id=review_id).first()
+
+    if existing_vote:
+        if existing_vote.type == 'like':
+            # Usuário já deu like, remove o like
+            db.session.delete(existing_vote)
+            review.likes -= 1
+            user_vote_status = None
+        else:
+            # Usuário deu dislike, muda para like
+            existing_vote.type = 'like'
+            review.dislikes -= 1
+            review.likes += 1
+            user_vote_status = 'like'
+    else:
+        # Usuário não votou, adiciona like
+        new_vote = ReviewVote(user_id=user_id, review_id=review_id, type='like')
+        db.session.add(new_vote)
+        review.likes += 1
+        user_vote_status = 'like'
+
     db.session.commit()
-    return jsonify({'likes': review.likes, 'dislikes': review.dislikes})
+    return jsonify({'likes': review.likes, 'dislikes': review.dislikes, 'user_vote': user_vote_status})
 
 @app.route('/review/<int:review_id>/dislike', methods=['POST'])
 @login_required
 def dislike_review(review_id):
     review = Review.query.get_or_404(review_id)
-    review.dislikes += 1
+    user_id = current_user.id
+
+    # Evita que o autor vote na própria review
+    if review.user_id == user_id:
+         return jsonify({'likes': review.likes, 'dislikes': review.dislikes, 'user_vote': None}), 400 # Retorna 400 Bad Request ou outro código apropriado
+
+    existing_vote = ReviewVote.query.filter_by(user_id=user_id, review_id=review_id).first()
+
+    if existing_vote:
+        if existing_vote.type == 'dislike':
+            # Usuário já deu dislike, remove o dislike
+            db.session.delete(existing_vote)
+            review.dislikes -= 1
+            user_vote_status = None
+        else:
+            # Usuário deu like, muda para dislike
+            existing_vote.type = 'dislike'
+            review.likes -= 1
+            review.dislikes += 1
+            user_vote_status = 'dislike'
+    else:
+        # Usuário não votou, adiciona dislike
+        new_vote = ReviewVote(user_id=user_id, review_id=review_id, type='dislike')
+        db.session.add(new_vote)
+        review.dislikes += 1
+        user_vote_status = 'dislike'
+
     db.session.commit()
-    return jsonify({'likes': review.likes, 'dislikes': review.dislikes})
+    return jsonify({'likes': review.likes, 'dislikes': review.dislikes, 'user_vote': user_vote_status})
 
 @app.route('/notifications')
 @login_required
@@ -946,6 +1037,10 @@ def like_response(response_id):
     response = ReviewResponse.query.get_or_404(response_id)
     user_id = current_user.id
 
+    # Evita que o autor vote na própria resposta
+    if response.user_id == user_id:
+        return jsonify({'likes': response.likes, 'dislikes': response.dislikes, 'user_vote': None}), 400 # Retorna 400 Bad Request ou outro código apropriado
+
     existing_vote = ReviewResponseVote.query.filter_by(user_id=user_id, response_id=response_id).first()
 
     if existing_vote:
@@ -953,25 +1048,32 @@ def like_response(response_id):
             # Usuário já deu like, remove o like
             db.session.delete(existing_vote)
             response.likes -= 1
+            user_vote_status = None
         else:
             # Usuário deu dislike, muda para like
             existing_vote.type = 'like'
             response.dislikes -= 1
             response.likes += 1
+            user_vote_status = 'like'
     else:
         # Usuário não votou, adiciona like
         new_vote = ReviewResponseVote(user_id=user_id, response_id=response_id, type='like')
         db.session.add(new_vote)
         response.likes += 1
+        user_vote_status = 'like'
 
     db.session.commit()
-    return jsonify({'likes': response.likes, 'dislikes': response.dislikes})
+    return jsonify({'likes': response.likes, 'dislikes': response.dislikes, 'user_vote': user_vote_status})
 
 @app.route('/response/<int:response_id>/dislike', methods=['POST'])
 @login_required
 def dislike_response(response_id):
     response = ReviewResponse.query.get_or_404(response_id)
     user_id = current_user.id
+
+    # Evita que o autor vote na própria resposta
+    if response.user_id == user_id:
+        return jsonify({'likes': response.likes, 'dislikes': response.dislikes, 'user_vote': None}), 400 # Retorna 400 Bad Request ou outro código apropriado
 
     existing_vote = ReviewResponseVote.query.filter_by(user_id=user_id, response_id=response_id).first()
 
@@ -980,19 +1082,22 @@ def dislike_response(response_id):
             # Usuário já deu dislike, remove o dislike
             db.session.delete(existing_vote)
             response.dislikes -= 1
+            user_vote_status = None
         else:
             # Usuário deu like, muda para dislike
             existing_vote.type = 'dislike'
             response.likes -= 1
             response.dislikes += 1
+            user_vote_status = 'dislike'
     else:
         # Usuário não votou, adiciona dislike
         new_vote = ReviewResponseVote(user_id=user_id, response_id=response_id, type='dislike')
         db.session.add(new_vote)
         response.dislikes += 1
+        user_vote_status = 'dislike'
 
     db.session.commit()
-    return jsonify({'likes': response.likes, 'dislikes': response.dislikes})
+    return jsonify({'likes': response.likes, 'dislikes': response.dislikes, 'user_vote': user_vote_status})
 
 @app.route('/friend_request/<int:notification_id>/accept', methods=['POST'])
 @login_required

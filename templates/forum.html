@@ -81,23 +81,19 @@
                         </div>
 
                         <div class="review-actions">
-                            <form action="{{ url_for('like_review', review_id=review.id) }}" method="post" class="d-inline">
-                                <button type="submit" class="post-action-btn">
-                                    <i class="fas fa-thumbs-up"></i> Útil ({{ review.likes }})
-                                </button>
-                            </form>
-                            <form action="{{ url_for('dislike_review', review_id=review.id) }}" method="post" class="d-inline">
-                                <button type="submit" class="post-action-btn">
-                                    <i class="fas fa-thumbs-down"></i> Inútil ({{ review.dislikes }})
-                                </button>
-                            </form>
+                            <button type="button" class="post-action-btn like-btn {% if review.user_vote == 'like' %}liked{% endif %}" data-review-id="{{ review.id }}" data-action="like" data-user-vote="{{ review.user_vote or '' }}">
+                                <i class="fas fa-thumbs-up"></i> Útil (<span class="likes-count">{{ review.likes }}</span>)
+                            </button>
+                            <button type="button" class="post-action-btn dislike-btn {% if review.user_vote == 'dislike' %}disliked{% endif %}" data-review-id="{{ review.id }}" data-action="dislike" data-user-vote="{{ review.user_vote or '' }}">
+                                <i class="fas fa-thumbs-down"></i> Inútil (<span class="dislikes-count">{{ review.dislikes }}</span>)
+                            </button>
                         </div>
 
                         <div class="review-responses">
                             <h6>Respostas</h6>
                             {% if current_user.is_authenticated %}
                                 <form action="{{ url_for('respond_to_review', review_id=review.id) }}" method="post" class="response-form">
-                                    <textarea class="form-control" name="content" rows="2" placeholder="Escreva uma resposta..." required></textarea>
+                                    <textarea class="form-control" name="content" rows="2" placeholder="Escreva uma resposta..."></textarea>
                                     <button type="submit" class="btn btn-primary btn-sm">
                                         <i class="fas fa-reply"></i> Responder
                                     </button>
@@ -122,16 +118,12 @@
                                     </div>
                                     <div class="response-actions d-flex justify-content-between align-items-center mt-2">
                                         <div class="d-flex">
-                                            <form action="{{ url_for('like_response', response_id=response.id) }}" method="post" class="me-2">
-                                                <button type="submit" class="post-action-btn btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-thumbs-up"></i> Útil ({{ response.likes }})
-                                                </button>
-                                            </form>
-                                            <form action="{{ url_for('dislike_response', response_id=response.id) }}" method="post">
-                                                <button type="submit" class="post-action-btn btn btn-sm btn-outline-danger">
-                                                    <i class="fas fa-thumbs-down"></i> Inútil ({{ response.dislikes }})
-                                                </button>
-                                            </form>
+                                            <button type="button" class="post-action-btn btn btn-sm btn-outline-primary like-response-btn {% if response.user_vote == 'like' %}liked{% endif %}" data-response-id="{{ response.id }}" data-action="like" data-user-vote="{{ response.user_vote or '' }}">
+                                                <i class="fas fa-thumbs-up"></i> Útil (<span class="likes-count">{{ response.likes }}</span>)
+                                            </button>
+                                            <button type="button" class="post-action-btn btn btn-sm btn-outline-danger dislike-response-btn {% if response.user_vote == 'dislike' %}disliked{% endif %}" data-response-id="{{ response.id }}" data-action="dislike" data-user-vote="{{ response.user_vote or '' }}">
+                                                <i class="fas fa-thumbs-down"></i> Inútil (<span class="dislikes-count">{{ response.dislikes }}</span>)
+                                            </button>
                                         </div>
                                         {% if current_user.is_authenticated and current_user.id == response.user_id %}
                                         <form action="{{ url_for('delete_response', response_id=response.id) }}" method="post" class="delete-response-form ms-auto">
@@ -159,11 +151,11 @@
                         {% if page_num %}
                             {% if reviews.page == page_num %}
                                 <li class="page-item active" aria-current="page">
-                                    <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
+                                    <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by, filter=filter_by) }}">{{ page_num }}</a>
                                 </li>
                             {% else %}
                                 <li class="page-item">
-                                    <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
+                                    <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by, filter=filter_by) }}">{{ page_num }}</a>
                                 </li>
                             {% endif %}
                         {% else %}
@@ -264,79 +256,188 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Função para tratar ações de like/dislike via AJAX
-    function handleVoteAction(event) {
-        event.preventDefault(); // Impede o redirecionamento padrão do formulário
+    // Função para atualizar contadores e aparência dos botões de voto
+    function updateVoteUI(button, data) {
+        const reviewCard = button.closest('.review-card');
+        const responseCard = button.closest('.response-card');
+        const parentElement = reviewCard || responseCard; // Encontra o pai mais próximo (review ou response)
 
-        const form = event.target;
-        const actionUrl = form.action;
-        const method = form.method;
+        if (parentElement) {
+            // Atualiza contadores
+            const likesCountSpan = parentElement.querySelector('.likes-count');
+            const dislikesCountSpan = parentElement.querySelector('.dislikes-count');
+            if (likesCountSpan) likesCountSpan.textContent = data.likes;
+            if (dislikesCountSpan) dislikesCountSpan.textContent = data.dislikes;
 
-        console.log('Formulário de ação (LIKE/DISLIKE) submetido, prevenção padrão ativada. URL:', actionUrl);
+            // Remove classes de estado de voto existentes em todos os botões de voto dentro do pai
+            parentElement.querySelectorAll('.post-action-btn').forEach(btn => {
+                btn.classList.remove('liked', 'disliked');
+                btn.dataset.userVote = ''; // Limpa o data attribute do voto antigo
+            });
 
-        fetch(actionUrl, {
-            method: method,
-            // Se você estiver usando CSRF, adicione o cabeçalho aqui:
-            // headers: {
-            //     'X-CSRFToken': '{{ csrf_token() }}'
-            // },
-        })
-        .then(response => {
-            if (!response.ok) {
-                console.error('Erro HTTP na ação:', response.status, response.statusText);
-                // Tenta ler o corpo da resposta para detalhes do erro, mas falha silenciosamente se não for JSON
-                response.json().then(err => console.error('Detalhes do erro:', err)).catch(() => {});
-                alert('Ocorreu um erro ao processar sua ação.'); // Notificar o usuário
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Resposta da API LIKE/DISLIKE:', data);
-            // Verifica se a resposta tem as propriedades esperadas
-            if (data.hasOwnProperty('likes') && data.hasOwnProperty('dislikes')) {
-                // Atualiza a contagem de likes/dislikes no DOM
-                // Encontra o card pai (review ou response)
-                const parentCard = form.closest('.review-card') || form.closest('.response-card');
-                if (parentCard) {
-                    const likeButton = parentCard.querySelector('button i.fa-thumbs-up').closest('button');
-                    const dislikeButton = parentCard.querySelector('button i.fa-thumbs-down').closest('button');
-
-                    if (likeButton) {
-                        likeButton.innerHTML = '<i class="fas fa-thumbs-up"></i> ' + (parentCard.classList.contains('review-card') ? 'Útil' : 'Curtir') + ' (' + data.likes + ')';
-                    }
-                    if (dislikeButton) {
-                        dislikeButton.innerHTML = '<i class="fas fa-thumbs-down"></i> ' + (parentCard.classList.contains('review-card') ? 'Inútil' : 'Não Curtir') + ' (' + data.dislikes + ')';
-                    }
+            // Adiciona a classe e atualiza o data attribute apenas no botão correspondente ao novo estado de voto
+            if (data.user_vote === 'like') {
+                // Encontra o botão de like correto dentro do elemento pai
+                const likeButton = parentElement.querySelector('.like-btn') || parentElement.querySelector('.like-response-btn');
+                if (likeButton) {
+                    likeButton.classList.add('liked');
+                    likeButton.dataset.userVote = 'like';
                 }
-            } else {
-                console.error('Resposta da API não contém contagem de likes/dislikes:', data);
-                alert('Resposta inválida do servidor.');
+            } else if (data.user_vote === 'dislike') {
+                 // Encontra o botão de dislike correto dentro do elemento pai
+                const dislikeButton = parentElement.querySelector('.dislike-btn') || parentElement.querySelector('.dislike-response-btn');
+                 if (dislikeButton) {
+                    dislikeButton.classList.add('disliked');
+                    dislikeButton.dataset.userVote = 'dislike';
+                 }
             }
-        })
-        .catch(error => {
-            console.error('Erro na requisição fetch:', error);
-            // alert('Ocorreu um erro ao processar sua ação.'); // Mensagem já mostrada no erro HTTP
-        });
+        }
     }
 
-    // Adiciona listener para botões de like/dislike de avaliações principais
-    document.querySelectorAll('.review-card > .review-actions form.d-inline button[type="submit"]').forEach(button => {
-        button.addEventListener('click', handleVoteAction);
+    // Função para lidar com likes/dislikes de reviews
+    function handleReviewVote(button) {
+        const reviewId = button.dataset.reviewId;
+        const action = button.dataset.action;
+        const url = `/review/${reviewId}/${action}`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
+            if (!response.ok && response.status !== 400) {
+                console.error('Erro HTTP:', response.status, response.statusText);
+                // Opcional: mostrar uma mensagem de erro para o usuário
+                // alert('Ocorreu um erro ao processar seu voto.');
+                return Promise.reject('Erro HTTP ou não autorizado'); // Interrompe a cadeia .then()
+            }
+            return response.json(); // Continua para parsear o JSON
+        })
+        .then(data => {
+            updateVoteUI(button, data); // Chama a função para atualizar UI
+        })
+        .catch(error => console.error('Erro na requisição fetch:', error));
+    }
+
+    // Função para lidar com likes/dislikes de respostas
+    function handleResponseVote(button) {
+        const responseId = button.dataset.responseId;
+        const action = button.dataset.action;
+        const url = `/response/${responseId}/${action}`;
+
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+         .then(response => {
+            // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
+            if (!response.ok && response.status !== 400) {
+                console.error('Erro HTTP:', response.status, response.statusText);
+                // Opcional: mostrar uma mensagem de erro para o usuário
+                // alert('Ocorreu um erro ao processar seu voto.');
+                return Promise.reject('Erro HTTP ou não autorizado'); // Interrompe a cadeia .then()
+            }
+            return response.json(); // Continua para parsear o JSON
+        })
+        .then(data => {
+             updateVoteUI(button, data); // Chama a função para atualizar UI
+        })
+        .catch(error => console.error('Erro na requisição fetch:', error));
+    }
+
+    // Adicionar event listeners para os botões de review
+    document.querySelectorAll('.like-btn, .dislike-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Verifica se o botão já tem o estado clicado
+            const userVote = this.dataset.userVote;
+            const action = this.dataset.action; // 'like' ou 'dislike'
+            
+            if (userVote === action) {
+                // Se já clicou no mesmo botão, remover voto (enviar ação oposta)
+                const reviewId = this.dataset.reviewId;
+                const oppositeAction = action === 'like' ? 'dislike' : 'like'; // Ação oposta para remover o voto
+                const url = `/review/${reviewId}/${oppositeAction}`;
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => {
+                     // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
+                    if (!response.ok && response.status !== 400) {
+                        console.error('Erro HTTP:', response.status, response.statusText);
+                        // Opcional: mostrar uma mensagem de erro para o usuário
+                        // alert('Ocorreu um erro ao processar seu voto.');
+                        return Promise.reject('Erro HTTP ou não autorizado'); // Interrompe a cadeia .then()
+                    }
+                    return response.json(); // Continua para parsear o JSON
+                })
+                .then(data => {
+                    // Ao remover o voto, user_vote no backend será None, o que updateVoteUI trata removendo as classes
+                    updateVoteUI(this, data);
+                })
+                .catch(error => console.error('Erro na requisição fetch:', error));
+
+            } else {
+                 // Se não tem voto ou clicou no voto oposto, processa o voto normal
+                 handleReviewVote(this);
+            }
+        });
     });
 
-    // Adiciona listener para botões de like/dislike de respostas de avaliação
-    document.querySelectorAll('.response-card > .response-actions form button[type="submit"]').forEach(button => {
-         // Exclui botões de delete
-        if (!button.closest('form').classList.contains('delete-response-form')) {
-             button.addEventListener('click', handleVoteAction);
-         }
-     });
+    // Adicionar event listeners para os botões de resposta
+    document.querySelectorAll('.like-response-btn, .dislike-response-btn').forEach(button => {
+        button.addEventListener('click', function() {
+             // Verifica se o botão já tem o estado clicado
+            const userVote = this.dataset.userVote;
+            const action = this.dataset.action; // 'like' ou 'dislike'
+            
+            if (userVote === action) {
+                 // Se já clicou no mesmo botão, remover voto (enviar ação oposta)
+                const responseId = this.dataset.responseId;
+                const oppositeAction = action === 'like' ? 'dislike' : 'like'; // Ação oposta para remover o voto
+                const url = `/response/${responseId}/${oppositeAction}`;
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => {
+                     // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
+                    if (!response.ok && response.status !== 400) {
+                        console.error('Erro HTTP:', response.status, response.statusText);
+                        // Opcional: mostrar uma mensagem de erro para o usuário
+                        // alert('Ocorreu um erro ao processar seu voto.');
+                        return Promise.reject('Erro HTTP ou não autorizado'); // Interrompe a cadeia .then()
+                    }
+                    return response.json(); // Continua para parsear o JSON
+                })
+                .then(data => {
+                    // Ao remover o voto, user_vote no backend será None, o que updateVoteUI trata removendo as classes
+                    updateVoteUI(this, data);
+                })
+                .catch(error => console.error('Erro na requisição fetch:', error));
 
-     // Confirmação para apagar avaliações (Reviews)
+            } else {
+                 // Se não tem voto ou clicou no voto oposto, processa o voto normal
+                 handleResponseVote(this);
+            }
+        });
+    });
+
+    // Confirmação para apagar avaliações (Reviews)
     document.querySelectorAll('.review-card .delete-form button').forEach(button => {
         button.addEventListener('click', function(event) {
             if (!confirm('Tem certeza que deseja apagar esta avaliação?')) {

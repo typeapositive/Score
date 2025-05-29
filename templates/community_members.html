@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Membros da Comunidade {{ community.name }} - SCORE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container community-members-page">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h1 class="card-title mb-4">Membros da Comunidade {{ community.name }}</h1>
+                    <p><a href="{{ url_for('community_details', community_id=community.id) }}">&leftarrow; Voltar para a Comunidade</a></p>
+
+                    <div class="list-group">
+                        {% for member in members %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <img src="{{ url_for('static', filename=member.avatar_url) }}" alt="{{ member.username }}" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                                    <div>
+                                        <a href="{{ url_for('profile', username=member.username) }}" class="text-decoration-none" style="color: #66c0f4;">{{ member.username }}</a>
+                                        {% if community.creator_id == member.id %}
+                                            <span class="badge bg-warning ms-2"><i class="fas fa-crown"></i> Líder</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if current_user.is_authenticated and current_user.id != member.id %}
+                                    <div>
+                                        {% if member.is_friend %}
+                                            <span class="badge bg-success"><i class="fas fa-check"></i> Amigo</span>
+                                        {% elif member.friendship_pending %}
+                                            <span class="badge bg-info"><i class="fas fa-hourglass"></i> Pendente</span>
+                                        {% else %}
+                                            <form action="{{ url_for('send_friend_request', username=member.username) }}" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-user-plus"></i> Adicionar Amigo
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="list-group-item text-muted">Nenhum membro encontrado.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
