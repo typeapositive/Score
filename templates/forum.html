@@ -307,7 +307,8 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            body: JSON.stringify({}) // Envia um corpo JSON vazio
         })
         .then(response => {
             // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
@@ -335,7 +336,8 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-            }
+            },
+            body: JSON.stringify({}) // Envia um corpo JSON vazio
         })
          .then(response => {
             // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
@@ -370,7 +372,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    body: JSON.stringify({}) // Envia um corpo JSON vazio
                 })
                 .then(response => {
                      // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
@@ -412,7 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                    }
+                    },
+                    body: JSON.stringify({}) // Envia um corpo JSON vazio
                 })
                 .then(response => {
                      // Verifica se a resposta foi bem-sucedida (status 2xx) ou 400 (autor tentando votar)
