@@ -252,17 +252,17 @@ def forum():
             ((Friendship.user_id == current_user.id) | (Friendship.friend_id == current_user.id)) &
             (Friendship.status == 'accepted')
         ).all()
-        
+
         friend_ids = []
         for friendship in friendships:
             if friendship.user_id == current_user.id:
                 friend_ids.append(friendship.friend_id)
             else:
                 friend_ids.append(friendship.user_id)
-        
+
         # Inclui o próprio usuário nas avaliações de amigos (opcional, mas comum em timelines)
         # friend_ids.append(current_user.id)
-        
+
         # Filtra as avaliações pelos IDs dos amigos
         if friend_ids:
             query = query.filter(Review.user_id.in_(friend_ids))
@@ -294,9 +294,56 @@ def forum():
         if game:
             review.game_img = game.get('img_url', '')
             
+    # --- Busca de dados para o Hall da Fama ---
+    # Usuário com mais avaliações
+    user_most_reviews_data = db.session.query(User, db.func.count(Review.id).label('review_count'))\
+        .join(Review)\
+        .group_by(User)\
+        .order_by(db.desc('review_count'))\
+        .first()
+    user_most_reviews = user_most_reviews_data[0] if user_most_reviews_data else None
+    user_most_reviews_count = user_most_reviews_data[1] if user_most_reviews_data else 0
+
+    # Comunidade com mais membros
+    community_most_members_data = db.session.query(Community, db.func.count(CommunityMember.id).label('member_count'))\
+        .outerjoin(CommunityMember)\
+        .group_by(Community)\
+        .order_by(db.desc('member_count'))\
+        .first()
+    community_most_members = community_most_members_data[0] if community_most_members_data else None
+    community_most_members_count = community_most_members_data[1] if community_most_members_data else 0
+
+    # Comunidade mais ativa (com mais posts)
+    community_most_active_data = db.session.query(Community, db.func.count(Post.id).label('post_count'))\
+        .outerjoin(Post)\
+        .group_by(Community)\
+        .order_by(db.desc('post_count'))\
+        .first()
+    community_most_active = community_most_active_data[0] if community_most_active_data else None
+    community_most_active_count = community_most_active_data[1] if community_most_active_data else 0
+
+    # Jogo com mais avaliações
+    game_most_reviews_data = db.session.query(Review.game_id, Review.game_name, db.func.count(Review.id).label('review_count'))\
+        .group_by(Review.game_id, Review.game_name)\
+        .order_by(db.desc('review_count'))\
+        .first()
+    game_most_reviews_game_id = game_most_reviews_data[0] if game_most_reviews_data else None
+    game_most_reviews_name = game_most_reviews_data[1] if game_most_reviews_data else None
+    game_most_reviews_count = game_most_reviews_data[2] if game_most_reviews_data else 0
+    # --- Fim da busca de dados para o Hall da Fama ---
+
     print(f"DEBUG: Tipo de reviews antes de renderizar forum.html: {type(reviews)}") # Log de depuração
     
-    return render_template('forum.html', reviews=reviews, sort_by=sort_by, filter_by=filter_by, steam_api=steam_api)
+    return render_template('forum.html', reviews=reviews, sort_by=sort_by, filter_by=filter_by, steam_api=steam_api,
+                           user_most_reviews=user_most_reviews,
+                           user_most_reviews_count=user_most_reviews_count,
+                           community_most_members=community_most_members,
+                           community_most_members_count=community_most_members_count,
+                           community_most_active=community_most_active,
+                           community_most_active_count=community_most_active_count,
+                           game_most_reviews_game_id=game_most_reviews_game_id,
+                           game_most_reviews_name=game_most_reviews_name,
+                           game_most_reviews_count=game_most_reviews_count)
 
 @app.route('/communities')
 def communities():
@@ -1178,6 +1225,33 @@ def user_friends(username):
         friends.append(friend)
     
     return render_template('user_friends.html', user=user, friends=friends)
+
+@app.route('/edit_community', methods=['POST'])
+@login_required
+def edit_community():
+    community_id = request.form.get('community_id')
+    name = request.form.get('name')
+    description = request.form.get('description')
+    
+    community = Community.query.get_or_404(community_id)
+    
+    # Verifica se o usuário é o criador da comunidade
+    if current_user.id != community.creator_id:
+        flash('Você não tem permissão para editar esta comunidade.', 'error')
+        return redirect(url_for('communities'))
+    
+    # Atualiza os dados da comunidade
+    community.name = name
+    community.description = description
+    
+    try:
+        db.session.commit()
+        flash('Comunidade atualizada com sucesso!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Erro ao atualizar a comunidade.', 'error')
+    
+    return redirect(url_for('community_details', community_id=community_id))
 
 if __name__ == '__main__':
     with app.app_context():

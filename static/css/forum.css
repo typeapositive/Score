@@ -1,0 +1,333 @@
+/* static/css/forum.css */
+
+/* Estilos para o conteúdo principal do fórum */
+.forum-content {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Estilos para os cards de avaliação */
+.review-card {
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para o cabeçalho da avaliação */
+.review-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.review-header img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+.review-info h4 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.2rem;
+}
+
+.review-info p {
+    margin: 5px 0 0;
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Estilos para o conteúdo da avaliação */
+.review-content {
+    color: #fff;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+/* Estilos para as ações da avaliação */
+.review-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.post-action-btn {
+    background: none;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.post-action-btn:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Estilos para as respostas */
+.review-responses {
+    background-color: #222;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.review-responses h6 {
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.response-form {
+    margin-bottom: 15px;
+}
+
+.response-form textarea {
+    background-color: #333;
+    border: 1px solid #444;
+    color: #fff;
+    resize: vertical;
+}
+
+.response-form textarea:focus {
+    background-color: #333;
+    border-color: #666;
+    color: #fff;
+    box-shadow: none;
+}
+
+.response-card {
+    background-color: #2a2a2a;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+.response-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.response-author-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.response-author-name {
+    margin: 0;
+    color: #fff;
+}
+
+.response-date {
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.response-content {
+    color: #ddd;
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+.response-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Estilos para os filtros e ordenação */
+.forum-filters {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-end; /* Alinha à direita na coluna principal */
+}
+
+.forum-filters select {
+    background-color: #1c2a3a;
+    color: #fff;
+    border: 1px solid #2e4052;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.forum-filters select:focus {
+    outline: none;
+    border-color: #5a8ee6;
+}
+
+/* Estilos para a paginação */
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 30px;
+}
+
+.pagination a {
+    color: #fff;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    background-color: #333;
+    transition: all 0.2s;
+}
+
+.pagination a:hover {
+    background-color: #444;
+}
+
+.pagination a.active {
+    background-color: #007bff;
+}
+
+.pagination span {
+    color: #666;
+    padding: 5px 10px;
+}
+
+/* Estilos para a seção do Hall da Fama */
+.hall-of-fame-section {
+    background-color: #1c2a3a; /* Cor de fundo */
+    border-radius: 8px;
+    padding: 20px; /* Padding interno */
+    margin-top: 55px; /* Adiciona espaço acima do Hall da Fama */
+    margin-bottom: 20px; /* Espaço abaixo */
+    border: 1px solid #2e4052; /* Borda sutil */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: #fff; /* Cor do texto */
+}
+
+.hall-of-fame-section h3 {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: #ffd700;
+    border-bottom: 1px solid #ffd700;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    text-align: center;
+
+    background: linear-gradient(90deg, #b8860b 0%, #ffd700 20%, #fffbe6 50%, #ffd700 80%, #b8860b 100%);
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    opacity: 1;
+    animation: shine-smooth 4s ease-in-out infinite alternate;
+}
+
+.hall-of-fame-section h3 i.fas.fa-crown {
+    color: #ffd700;
+    margin-right: 10px;
+    background: linear-gradient(90deg, #b8860b 0%, #ffd700 20%, #fffbe6 50%, #ffd700 80%, #b8860b 100%);
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine-smooth 4s ease-in-out infinite alternate;
+    display: inline-block;
+}
+
+/* Efeito dourado e brilho para o ícone de usuário do Hall da Fama */
+.hall-of-fame-gold-icon {
+    background: linear-gradient(90deg, #b8860b 0%, #ffd700 20%, #fffbe6 50%, #ffd700 80%, #b8860b 100%);
+    background-size: 300% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine-smooth 4s ease-in-out infinite alternate;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.hall-of-fame-gold-icon i.fas.fa-user {
+    font-size: 2rem;
+    color: #ffd700;
+    background: inherit;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine-smooth 4s ease-in-out infinite alternate;
+}
+
+/* Nova animação de brilho suave */
+@keyframes shine-smooth {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+.hall-of-fame-item {
+    margin-bottom: 15px; /* Espaço entre os itens do Hall da Fama */
+    padding-bottom: 15px; /* Espaço interno abaixo */
+    border-bottom: 1px dashed #2e4052; /* Borda tracejada */
+}
+
+.hall-of-fame-item:last-child {
+    border-bottom: none; /* Remover borda do último item */
+    padding-bottom: 0;
+}
+
+.hall-of-fame-item h5 {
+    color: #ffffff; /* Cor de destaque para os títulos dos itens */
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+
+.hall-of-fama-item p {
+    margin: 0;
+    font-size: 1em;
+    color: #ddd;
+}
+
+.hall-of-fama-item a {
+    color: #fff; /* Cor do link */
+    text-decoration: none;
+    font-weight: bold; /* Deixar links em negrito */
+}
+
+.hall-of-fama-item a:hover {
+    text-decoration: underline;
+    color: #5a8ee6; /* Mudar cor do link ao passar o mouse */
+}
+
+/* Estilos para avatares no Hall da Fama */
+.hall-of-fame-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Avatares redondos */
+    object-fit: cover; /* Garante que a imagem cubra a área */
+    border: 2px solid #ffd700; /* Borda dourada */
+}
+
+/* Estilos para ícones de jogos/comunidades no Hall da Fama */
+.hall-of-fame-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px; /* Cantos levemente arredondados */
+    object-fit: cover; /* Garante que a imagem cubra a área */
+    border: 2px solid #b8860b; /* Borda de bronze/cobre */
+}
+
+/* Estilos para placeholders de ícones quando a imagem não está disponível */
+.hall-of-fame-icon-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+    background-color: #2a2a2a; /* Fundo escuro */
+    color: #888; /* Cor do ícone */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    border: 2px dashed #444; /* Borda tracejada */
+} 

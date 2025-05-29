@@ -91,7 +91,12 @@
                                     <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="communityOptionsDropdown-{{ community.id }}">
                                         {% if current_user.id == community.creator_id %}
                                             {# Opções para o criador #}
-                                            <li><a class="dropdown-item" href="#">Editar Descrição/Nome</a></li>
+                                            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#editCommunityModal" 
+                                                data-community-id="{{ community.id }}"
+                                                data-community-name="{{ community.name }}"
+                                                data-community-description="{{ community.description }}">
+                                                Editar Descrição/Nome
+                                            </a></li>
                                             <li><a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmDeleteCommunityModal" data-community-id="{{ community.id }}">Apagar Comunidade</a></li>
                                         {% elif community.is_member %}
                                             {# Opções para membros (não criador) #}
@@ -137,6 +142,35 @@
 </div>
 
 {# Modais de Confirmação #}
+
+{# Modal de Edição de Comunidade #}
+<div class="modal fade" id="editCommunityModal" tabindex="-1" aria-labelledby="editCommunityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCommunityModalLabel">Editar Comunidade</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('edit_community') }}" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="community_id" id="edit_community_id">
+                    <div class="mb-3">
+                        <label for="edit_community_name" class="form-label">Nome da Comunidade</label>
+                        <input type="text" class="form-control bg-dark text-light" id="edit_community_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_community_description" class="form-label">Descrição</label>
+                        <textarea class="form-control bg-dark text-light" id="edit_community_description" name="description" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {# Modal de Confirmação Apagar Comunidade #}
 <div class="modal fade" id="confirmDeleteCommunityModal" tabindex="-1" aria-labelledby="confirmDeleteCommunityModalLabel" aria-hidden="true">
@@ -306,5 +340,39 @@
         });
     }
 
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal de Edição de Comunidade
+    const editCommunityModal = document.getElementById('editCommunityModal');
+    if (editCommunityModal) {
+        editCommunityModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const communityId = button.getAttribute('data-community-id');
+            const communityName = button.getAttribute('data-community-name');
+            const communityDescription = button.getAttribute('data-community-description');
+
+            const modal = this;
+            modal.querySelector('#edit_community_id').value = communityId;
+            modal.querySelector('#edit_community_name').value = communityName;
+            modal.querySelector('#edit_community_description').value = communityDescription;
+        });
+    }
+
+    // Confirmação para apagar comunidade
+    const deleteCommunityModal = document.getElementById('confirmDeleteCommunityModal');
+    if (deleteCommunityModal) {
+        deleteCommunityModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const communityId = button.getAttribute('data-community-id');
+            const form = this.querySelector('form');
+            form.action = "{{ url_for('delete_community') }}";
+            form.querySelector('input[name="community_id"]').value = communityId;
+        });
+    }
+});
 </script>
 {% endblock %} 

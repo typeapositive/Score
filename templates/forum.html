@@ -4,167 +4,263 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/community.css') }}">
+{# Adicionar CSS específico para o fórum #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/forum.css') }}">
+{# Link para Google Font - Cinzel #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&display=swap" rel="stylesheet">
 {% endblock %}
 
 {% block content %}
 <div class="container">
-    <h1 class="mb-4">Fórum de Avaliações</h1>
+    <h1 class="mb-4">Fórum</h1>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4>Avaliações</h4>
-        <div>
-            {# Dropdown de Filtro e Ordenação #}
-            <div class="dropdown">
-                <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="forumFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-filter me-1"></i> Filtrar/Ordenar
-                </button>
-                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="forumFilterDropdown">
-                    <li><h6 class="dropdown-header">Ordenar por:</h6></li>
-                    <li><a class="dropdown-item {% if sort_by == 'recent' and not filter_by %}active{% endif %}" href="{{ url_for('forum', sort='recent', page=reviews.page, filter=filter_by) }}">Mais Recentes</a></li>
-                    <li><a class="dropdown-item {% if sort_by == 'popular' and not filter_by %}active{% endif %}" href="{{ url_for('forum', sort='popular', page=reviews.page, filter=filter_by) }}">Mais Populares</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><h6 class="dropdown-header">Filtrar por:</h6></li>
-                    <li><a class="dropdown-item {% if filter_by == 'friends' %}active{% endif %}" href="{{ url_for('forum', filter='friends', sort=sort_by, page=reviews.page) }}">Amigos</a></li>
-                    {# Adicionar opção para remover filtro, se houver um ativo #}
-                    {% if filter_by %}
-                    <li><a class="dropdown-item" href="{{ url_for('forum', sort=sort_by, page=reviews.page) }}">Mostrar Todos</a></li>
-                    {% endif %}
+    <div class="row"> {# Usar layout de grid para duas colunas #}
+        {# Coluna Principal para as Avaliações #}
+        <div class="col-md-8"> {# Ocupa 8 colunas em telas médias+ #}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Avaliações</h4>
+                <div>
+                    {# Dropdown de Filtro e Ordenação #}
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="forumFilterDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-filter me-1"></i> Filtrar/Ordenar
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="forumFilterDropdown">
+                            <li><h6 class="dropdown-header">Ordenar por:</h6></li>
+                            <li><a class="dropdown-item {% if sort_by == 'recent' and not filter_by %}active{% endif %}" href="{{ url_for('forum', sort='recent', page=reviews.page, filter=filter_by) }}">Mais Recentes</a></li>
+                            <li><a class="dropdown-item {% if sort_by == 'popular' and not filter_by %}active{% endif %}" href="{{ url_for('forum', sort='popular', page=reviews.page, filter=filter_by) }}">Mais Populares</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Filtrar por:</h6></li>
+                            <li><a class="dropdown-item {% if filter_by == 'friends' %}active{% endif %}" href="{{ url_for('forum', filter='friends', sort=sort_by, page=reviews.page) }}">Amigos</a></li>
+                            {# Adicionar opção para remover filtro, se houver um ativo #}
+                            {% if filter_by %}
+                            <li><a class="dropdown-item" href="{{ url_for('forum', sort=sort_by, page=reviews.page) }}">Mostrar Todos</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="reviews">
+                {% for review in reviews.items %}
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="review-game-info">
+                                <img src="{{ review.game_img }}" alt="{{ review.game_name }}" class="review-game-image">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start w-100">
+                                        <h5 class="review-game-name">
+                                            <a href="{{ url_for('review_game', appid=review.game_id) }}" class="text-decoration-none">
+                                                {{ review.game_name }}
+                                            </a>
+                                        </h5>
+                                        {% if current_user.is_authenticated and current_user.id == review.user_id %}
+                                        <form action="{{ url_for('delete_review', review_id=review.id) }}" method="post" class="delete-form ms-auto">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash-alt"></i> Apagar Avaliação
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                    <p class="review-rating">
+                                        {% for i in range(review.rating) %}
+                                            <i class="fas fa-star"></i>
+                                        {% endfor %}
+                                    </p>
+                                    <p class="review-author">
+                                        Por <a href="{{ url_for('profile', username=review.author.username) }}">{{ review.author.username }}</a> em {{ review.date_posted.strftime('%d/%m/%Y %H:%M') }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="review-content">
+                            {{ review.content }}
+                        </div>
+
+                        <div class="review-actions">
+                            <form action="{{ url_for('like_review', review_id=review.id) }}" method="post" class="d-inline">
+                                <button type="submit" class="post-action-btn">
+                                    <i class="fas fa-thumbs-up"></i> Útil ({{ review.likes }})
+                                </button>
+                            </form>
+                            <form action="{{ url_for('dislike_review', review_id=review.id) }}" method="post" class="d-inline">
+                                <button type="submit" class="post-action-btn">
+                                    <i class="fas fa-thumbs-down"></i> Inútil ({{ review.dislikes }})
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="review-responses">
+                            <h6>Respostas</h6>
+                            {% if current_user.is_authenticated %}
+                                <form action="{{ url_for('respond_to_review', review_id=review.id) }}" method="post" class="response-form">
+                                    <textarea class="form-control" name="content" rows="2" placeholder="Escreva uma resposta..." required></textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-reply"></i> Responder
+                                    </button>
+                                </form>
+                            {% endif %}
+
+                            {% for response in review.responses %}
+                                <div class="response-card">
+                                    <div class="response-header">
+                                        <img src="{{ url_for('static', filename=response.author.avatar_url) }}" alt="{{ response.author.username }}" class="response-author-avatar me-2">
+                                        <div>
+                                            <h6 class="response-author-name mb-1">
+                                                <a href="{{ url_for('profile', username=response.author.username) }}" class="text-decoration-none text-light">
+                                                    {{ response.author.username }}
+                                                </a>
+                                            </h6>
+                                            <p class="response-date text-muted">{{ response.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="response-content">
+                                        {{ response.content }}
+                                    </div>
+                                    <div class="response-actions d-flex justify-content-between align-items-center mt-2">
+                                        <div class="d-flex">
+                                            <form action="{{ url_for('like_response', response_id=response.id) }}" method="post" class="me-2">
+                                                <button type="submit" class="post-action-btn btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-thumbs-up"></i> Útil ({{ response.likes }})
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('dislike_response', response_id=response.id) }}" method="post">
+                                                <button type="submit" class="post-action-btn btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-thumbs-down"></i> Inútil ({{ response.dislikes }})
+                                                </button>
+                                            </form>
+                                        </div>
+                                        {% if current_user.is_authenticated and current_user.id == response.user_id %}
+                                        <form action="{{ url_for('delete_response', response_id=response.id) }}" method="post" class="delete-response-form ms-auto">
+                                            <button type="submit" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash-alt"></i> Apagar
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> Nenhuma avaliação encontrada.
+                    </div>
+                {% endfor %}
+            </div>
+
+            {# Links de Paginação #}
+            <nav aria-label="Navegação de páginas">
+                <ul class="pagination justify-content-center">
+                    {% for page_num in reviews.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                        {% if page_num %}
+                            {% if reviews.page == page_num %}
+                                <li class="page-item active" aria-current="page">
+                                    <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
+                                </li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">...</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
                 </ul>
+            </nav>
+        </div>
+
+        {# Coluna para o Hall da Fama #}
+        <div class="col-md-4"> {# Ocupa 4 colunas em telas médias+ #}
+             <div class="hall-of-fame-section"> {# Classe para estilizar a seção #}
+                <h3><i class="fas fa-crown me-2"></i> Hall da Fama</h3> {# Título com ícone #}
+                
+                {# Usuário com Mais Avaliações #}
+                <div class="hall-of-fame-item d-flex align-items-center">
+                    {% if user_most_reviews %}
+                        <div class="hall-of-fame-icon-placeholder me-3 hall-of-fame-gold-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h5>Usuário com Mais Avaliações</h5>
+                            <p><a href="{{ url_for('profile', username=user_most_reviews.username) }}">{{ user_most_reviews.username }}</a> ({{ user_most_reviews_count }} avaliações)</p>
+                        </div>
+                    {% else %}
+                        <div class="hall-of-fame-icon-placeholder me-3 hall-of-fame-gold-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h5>Usuário com Mais Avaliações</h5>
+                            <p class="text-muted">Nenhum usuário encontrado.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Comunidade com Mais Membros #}
+                <div class="hall-of-fame-item d-flex align-items-center">
+                    {% if community_most_members %}
+                        <img src="{{ community_most_members.game_img }}" alt="{{ community_most_members.name }}" class="hall-of-fame-icon me-3">
+                        <div>
+                            <h5>Comunidade com Mais Membros</h5>
+                            <p><a href="{{ url_for('community_details', community_id=community_most_members.id) }}">{{ community_most_members.name }}</a> ({{ community_most_members_count }} membros)</p>
+                        </div>
+                    {% else %}
+                        <div class="hall-of-fame-icon-placeholder me-3"><i class="fas fa-users"></i></div>
+                        <div>
+                            <h5>Comunidade com Mais Membros</h5>
+                            <p class="text-muted">Nenhuma comunidade encontrada.</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                {# Comunidade Mais Ativa (Mais Posts) #}
+                <div class="hall-of-fame-item d-flex align-items-center">
+                    {% if community_most_active %}
+                        <img src="{{ community_most_active.game_img }}" alt="{{ community_most_active.name }}" class="hall-of-fame-icon me-3">
+                        <div>
+                            <h5>Comunidade Mais Ativa</h5>
+                            <p><a href="{{ url_for('community_details', community_id=community_most_active.id) }}">{{ community_most_active.name }}</a> ({{ community_most_active_count }} posts)</p>
+                        </div>
+                    {% else %}
+                        <div class="hall-of-fame-icon-placeholder me-3"><i class="fas fa-fire"></i></div>
+                        <div>
+                            <h5>Comunidade Mais Ativa</h5>
+                            <p class="text-muted">Nenhuma comunidade encontrada.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# Jogo com Mais Avaliações #}
+                <div class="hall-of-fame-item d-flex align-items-center">
+                    {% if game_most_reviews_name %}
+                        {% set game_details = steam_api.get_game_details(game_most_reviews_game_id) %}
+                        {% if game_details and game_details.img_url %}
+                            <img src="{{ game_details.img_url }}" alt="{{ game_most_reviews_name }}" class="hall-of-fame-icon me-3">
+                        {% else %}
+                            <div class="hall-of-fame-icon-placeholder me-3"><i class="fas fa-gamepad"></i></div>
+                        {% endif %}
+                        <div>
+                            <h5>Jogo com Mais Avaliações</h5>
+                            <p><a href="{{ url_for('game_details', appid=game_most_reviews_game_id) }}">{{ game_most_reviews_name }}</a> ({{ game_most_reviews_count }} avaliações)</p>
+                        </div>
+                    {% else %}
+                        <div class="hall-of-fame-icon-placeholder me-3"><i class="fas fa-gamepad"></i></div>
+                        <div>
+                            <h5>Jogo com Mais Avaliações</h5>
+                            <p class="text-muted">Nenhum jogo encontrado.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
             </div>
         </div>
     </div>
-
-    <div class="reviews">
-        {% for review in reviews.items %}
-            <div class="review-card">
-                <div class="review-header">
-                    <div class="review-game-info">
-                        <img src="{{ review.game_img }}" alt="{{ review.game_name }}" class="review-game-image">
-                        <div>
-                            <div class="d-flex justify-content-between align-items-start w-100">
-                                <h5 class="review-game-name">
-                                    <a href="{{ url_for('review_game', appid=review.game_id) }}" class="text-decoration-none">
-                                        {{ review.game_name }}
-                                    </a>
-                                </h5>
-                                {% if current_user.is_authenticated and current_user.id == review.user_id %}
-                                <form action="{{ url_for('delete_review', review_id=review.id) }}" method="post" class="delete-form ms-auto">
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash-alt"></i> Apagar Avaliação
-                                    </button>
-                                </form>
-                                {% endif %}
-                            </div>
-                            <p class="review-rating">
-                                {% for i in range(review.rating) %}
-                                    <i class="fas fa-star"></i>
-                                {% endfor %}
-                            </p>
-                            <p class="review-author">
-                                Por <a href="{{ url_for('profile', username=review.author.username) }}">{{ review.author.username }}</a> em {{ review.date_posted.strftime('%d/%m/%Y %H:%M') }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="review-content">
-                    {{ review.content }}
-                </div>
-
-                <div class="review-actions">
-                    <form action="{{ url_for('like_review', review_id=review.id) }}" method="post" class="d-inline">
-                        <button type="submit" class="post-action-btn">
-                            <i class="fas fa-thumbs-up"></i> Útil ({{ review.likes }})
-                        </button>
-                    </form>
-                    <form action="{{ url_for('dislike_review', review_id=review.id) }}" method="post" class="d-inline">
-                        <button type="submit" class="post-action-btn">
-                            <i class="fas fa-thumbs-down"></i> Inútil ({{ review.dislikes }})
-                        </button>
-                    </form>
-                </div>
-
-                <div class="review-responses">
-                    <h6>Respostas</h6>
-                    {% if current_user.is_authenticated %}
-                        <form action="{{ url_for('respond_to_review', review_id=review.id) }}" method="post" class="response-form">
-                            <textarea class="form-control" name="content" rows="2" placeholder="Escreva uma resposta..." required></textarea>
-                            <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-reply"></i> Responder
-                            </button>
-                        </form>
-                    {% endif %}
-
-                    {% for response in review.responses %}
-                        <div class="response-card">
-                            <div class="response-header">
-                                <img src="{{ url_for('static', filename=response.author.avatar_url) }}" alt="{{ response.author.username }}" class="response-author-avatar me-2">
-                                <div>
-                                    <h6 class="response-author-name mb-1">
-                                        <a href="{{ url_for('profile', username=response.author.username) }}" class="text-decoration-none text-light">
-                                            {{ response.author.username }}
-                                        </a>
-                                    </h6>
-                                    <p class="response-date text-muted">{{ response.created_at.strftime('%d/%m/%Y %H:%M') }}</p>
-                                </div>
-                            </div>
-                            <div class="response-content">
-                                {{ response.content }}
-                            </div>
-                            <div class="response-actions d-flex justify-content-between align-items-center mt-2">
-                                <div class="d-flex">
-                                    <form action="{{ url_for('like_response', response_id=response.id) }}" method="post" class="me-2">
-                                        <button type="submit" class="post-action-btn btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-thumbs-up"></i> Útil ({{ response.likes }})
-                                        </button>
-                                    </form>
-                                    <form action="{{ url_for('dislike_response', response_id=response.id) }}" method="post">
-                                        <button type="submit" class="post-action-btn btn btn-sm btn-outline-danger">
-                                            <i class="fas fa-thumbs-down"></i> Inútil ({{ response.dislikes }})
-                                        </button>
-                                    </form>
-                                </div>
-                                {% if current_user.is_authenticated and current_user.id == response.user_id %}
-                                <form action="{{ url_for('delete_response', response_id=response.id) }}" method="post" class="delete-response-form ms-auto">
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-trash-alt"></i> Apagar
-                                    </button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i> Nenhuma avaliação encontrada.
-            </div>
-        {% endfor %}
-    </div>
-
-    {# Links de Paginação #}
-    <nav aria-label="Navegação de páginas">
-        <ul class="pagination justify-content-center">
-            {% for page_num in reviews.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                {% if page_num %}
-                    {% if reviews.page == page_num %}
-                        <li class="page-item active" aria-current="page">
-                            <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item">
-                            <a class="page-link" href="{{ url_for('forum', page=page_num, sort=sort_by) }}">{{ page_num }}</a>
-                        </li>
-                    {% endif %}
-                {% else %}
-                    <li class="page-item disabled">
-                        <a class="page-link" href="#">...</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </nav>
 </div>
 {% endblock %}
 

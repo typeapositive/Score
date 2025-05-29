@@ -1,7 +1,7 @@
 .profile-container {
-    max-width: 900px;
+    max-width: 960px;
     margin: 20px auto;
-    padding: 0 20px;
+    padding: 0 15px;
 }
 
 .profile-header {
@@ -51,20 +51,28 @@
 
 .profile-stats {
     display: flex;
-    gap: 20px;
-    color: #fff;
+    gap: 30px;
+    margin-top: 15px;
 }
 
 .stat-item {
     text-align: center;
+    cursor: pointer;
 }
 
-.stat-value {
-    font-size: 1.1em;
+.stat-item a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.stat-item .stat-value {
+    font-size: 1.5em;
     font-weight: bold;
+    color: #cfd3e7;
 }
 
-.stat-label {
+.stat-item .stat-label {
     font-size: 0.9em;
     color: #bbb;
 }
@@ -73,34 +81,35 @@
 .favorite-games,
 .communities-section,
 .timeline {
-    background-color: #1c2a3a; /* Cor de fundo para destacar a seção */
-    border-radius: 8px;
+    margin-top: 30px;
     padding: 20px;
-    margin-bottom: 20px;
-    border: 1px solid #2e4052; /* Borda sutil */
+    background-color: #1c2a3a;
+    border-radius: 8px;
+    border: 1px solid #2e4052;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    color: #fff;
 }
 
 .favorite-games h3,
 .communities-section h3,
 .timeline h3 {
-    color: #fff;
-    border-bottom: 1px solid #333;
+    color: #5a8ee6;
+    border-bottom: 1px solid #5a8ee6;
     padding-bottom: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .favorite-games-slots {
-    display: flex; /* Usar flexbox */
+    display: flex;
     gap: 15px;
-    flex-wrap: wrap; /* Permite quebrar linha em telas menores */
-    justify-content: center; /* Centraliza os slots */
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .game-slot {
-    width: 120px; /* Tamanho ajustado */
-    height: 120px; /* Tamanho ajustado */
-    border: 2px dashed #5a8ee6; /* Borda tracejada */
+    width: 120px;
+    height: 120px;
+    border: 2px dashed #5a8ee6;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -108,7 +117,7 @@
     border-radius: 8px;
     transition: border-color 0.3s ease;
     position: relative;
-    background-color: transparent; /* Transparente */
+    background-color: transparent;
 }
 
 .game-slot:hover {
@@ -121,14 +130,14 @@
 }
 
 .game-slot.filled {
-    border-style: solid; /* Borda sólida quando preenchido */
-    padding: 0; /* Remover padding para a imagem preencher */
+    border-style: solid;
+    padding: 0;
 }
 
 .game-slot.filled img {
     width: 100%;
     height: 100%;
-    object-fit: contain; /* Alterado de cover para contain */
+    object-fit: contain;
     border-radius: 6px;
 }
 
@@ -140,8 +149,8 @@
     border: none;
     border-radius: 50%;
     color: #fff;
-    width: 24px; /* Tamanho ajustado */
-    height: 24px; /* Tamanho ajustado */
+    width: 24px;
+    height: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -150,7 +159,7 @@
     line-height: 1;
     opacity: 0.8;
     transition: opacity 0.3s ease;
-    z-index: 2; /* Garantir que esteja acima da imagem */
+    z-index: 2;
 }
 
 .remove-game:hover {
@@ -158,94 +167,95 @@
 }
 
 .remove-game i {
-    font-size: 0.9em; /* Tamanho ajustado */
+    font-size: 0.9em;
     color: #fff;
 }
 
 .communities-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 15px;
 }
 
 .community-card-link {
     text-decoration: none;
+    color: inherit;
 }
 
 .community-card {
-    background-color: #2e4052;
+    background-color: #2a3a4a;
     border-radius: 8px;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
 }
 
 .community-card:hover {
     transform: translateY(-5px);
 }
 
-.community-image {
-    width: 80px;
-    height: 80px;
-    object-fit: contain; /* Alterado para contain */
+.community-card .community-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
 }
 
-.community-info {
+.community-card .community-info {
     padding: 10px;
 }
 
-.community-info h4 {
+.community-card .community-info h4 {
     margin: 0 0 5px 0;
     font-size: 1.1em;
     color: #fff;
 }
 
-.community-info p {
+.community-card .community-info p {
     margin: 0;
     font-size: 0.9em;
     color: #bbb;
 }
 
-.review-card {
-    background-color: #2e4052;
+.timeline .review-card {
+    background-color: #2a3a4a;
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
+    border: none;
+    box-shadow: none;
 }
 
-.review-header {
+.timeline .review-card .review-header {
     display: flex;
     align-items: center;
     margin-bottom: 10px;
 }
 
-.review-game-image {
-    width: 60px;
-    height: 60px;
-    object-fit: contain; /* Alterado para contain */
-    border-radius: 4px;
+.timeline .review-card .review-game-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
     margin-right: 15px;
+    border-radius: 4px;
 }
 
-.review-header h4 {
-    margin: 0 0 5px 0;
-    font-size: 1.1em;
-    color: #fff;
-}
-
-.review-rating i {
-    color: gold;
-    font-size: 1em;
-}
-
-.review-content {
+.timeline .review-card .review-content {
     color: #ddd;
-    margin-bottom: 10px;
+    line-height: 1.5;
 }
 
-.review-actions small {
-    color: #aaa;
+.timeline .review-card .review-actions {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #bbb;
+}
+
+.profile-container > div:not(.profile-header):not(.favorite-games) {
+    margin-top: 30px;
+}
+
+.profile-container > div.favorite-games {
+    margin-top: 30px;
 }
 
 /* Estilos para a modal de busca de jogos */
@@ -303,7 +313,7 @@
 
 .game-search-item img {
     border-radius: 4px;
-    margin-right: 10px; /* Espaçamento ajustado */
+    margin-right: 10px;
 }
 
 .game-search-item .game-name {
@@ -365,37 +375,35 @@
 
 /* Invite Community Modal Styles */
 .invite-community-btn {
-    background-color: #28a745; /* Tentando replicar a cor verde-azulada escura do btn-primary na imagem */
-    color: #fff; /* Cor do texto branco */
-    border: 1px solid #28a745; /* Borda sólida com a mesma cor de fundo */
-    border-radius: 0.25rem; /* Borda arredondada */
-    padding: .25rem .5rem; /* Padding interno para btn-sm */
+    background-color: #28a745;
+    color: #fff;
+    border: 1px solid #28a745;
+    border-radius: 0.25rem;
+    padding: .25rem .5rem;
     cursor: pointer;
     margin-left: 10px;
-    font-size: 0.875rem; /* Tamanho de fonte para btn-sm */
-    line-height: 1.5; /* Altura da linha */
-    display: inline-flex; /* Permite ícone e texto lado a lado */
-    align-items: center; /* Alinha verticalmente ícone e texto */
-    gap: 5px; /* Espaço entre ícone e texto */
+    font-size: 0.875rem;
+    line-height: 1.5;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
 
 .invite-community-btn:hover {
-    background-color: #218838; /* Cor um pouco mais escura ao passar o mouse */
-    border-color: #1e7e34; /* Cor da borda mais escura */
-    color: #fff; /* Manter texto branco */
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: #fff;
 }
 
 .invite-community-btn i {
-    /* O ícone Font Awesome já deve ter a cor do texto do botão */
-    color: inherit; /* Herda a cor do texto do botão pai */
-    font-size: 1em; /* Manter o tamanho do ícone relativo ao tamanho da fonte do botão */
-    margin-right: 0; /* Remover margem se o gap já estiver definindo o espaço */
+    color: inherit;
+    font-size: 1em;
+    margin-right: 0;
 }
 
 .invite-community-btn span {
-    /* Ajuste fino para alinhar o texto verticalmente com o ícone */
-    margin-top: 2px; /* Ajuste a margem superior conforme necessário */
+    margin-top: 2px;
 }
 
 .invite-community-item {
@@ -409,9 +417,9 @@
 }
 
 .invite-community-item img {
-    width: 40px; /* Tamanho ajustado para ser um pouco maior */
-    height: 40px; /* Tamanho ajustado */
-    object-fit: cover; /* Manter cover para garantir que preencha o espaço sem distorção excessiva */
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
     border-radius: 4px;
     margin-right: 10px;
 }
@@ -419,56 +427,53 @@
 .username-and-edit {
     display: flex;
     align-items: center;
-    /* Adicione um pequeno espaço entre o nome de usuário e o botão, se necessário */
-    gap: 10px; 
+    gap: 10px;
 }
 
 /* Estilos para a modal de Convite para Comunidade */
 #inviteCommunityModal .modal-content {
-    background-color: #1c2a3a !important; /* Fundo escuro */
-    color: #fff !important; /* Texto branco */
-    border: 1px solid #333 !important; /* Borda escura */
+    background-color: #1c2a3a !important;
+    color: #fff !important;
+    border: 1px solid #333 !important;
 }
 
 #inviteCommunityModal .modal-header {
-    border-bottom: 1px solid #333 !important; /* Borda escura */
-    background-color: #1c2a3a !important; /* Garante fundo escuro no cabeçalho */
+    border-bottom: 1px solid #333 !important;
+    background-color: #1c2a3a !important;
 }
 
 #inviteCommunityModal .modal-title {
-    color: #fff !important; /* Título branco */
+    color: #fff !important;
 }
 
 #inviteCommunityModal .btn-close {
-    filter: invert(1) !important; /* Ícone de fechar branco */
+    filter: invert(1) !important;
 }
 
 #inviteCommunityModal .modal-body {
-    color: #ddd !important; /* Cor do texto do corpo */
-    background-color: #1c2a3a !important; /* Garante fundo escuro no corpo */
+    color: #ddd !important;
+    background-color: #1c2a3a !important;
 }
 
 #inviteCommunityModal .modal-footer {
-    border-top: 1px solid #333 !important; /* Borda escura */
-    background-color: #1c2a3a !important; /* Garante fundo escuro no rodapé, se existir */
+    border-top: 1px solid #333 !important;
+    background-color: #1c2a3a !important;
 }
 
 #inviteCommunityModal .list-group-item {
-    background-color: transparent !important; /* Fundo transparente */
-    border-color: #333 !important; /* Borda escura */
-    color: #fff !important; /* Texto branco */
+    background-color: transparent !important;
+    border-color: #333 !important;
+    color: #fff !important;
 }
 
 #inviteCommunityModal .list-group-item:hover {
-    background-color: #2e4052 !important; /* Fundo escuro ao passar o mouse */
+    background-color: #2e4052 !important;
 }
 
-/* Ajuste para o texto dentro do modal-body, como parágrafos */
 #inviteCommunityModal .modal-body p {
     color: #ddd !important;
 }
 
-/* Garante que a imagem da comunidade/jogo na lista esteja correta */
 .invite-community-item img {
     width: 40px;
     height: 40px;
