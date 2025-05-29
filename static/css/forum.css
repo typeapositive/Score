@@ -198,7 +198,7 @@
     background-color: #1c2a3a; /* Cor de fundo */
     border-radius: 8px;
     padding: 20px; /* Padding interno */
-    margin-top: 55px; /* Adiciona espaço acima do Hall da Fama */
+    margin-top: 110px; /* Aumentado de 55px para 80px */
     margin-bottom: 20px; /* Espaço abaixo */
     border: 1px solid #2e4052; /* Borda sutil */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
